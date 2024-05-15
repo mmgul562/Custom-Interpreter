@@ -4,7 +4,7 @@ int main() {
     Lexer lexer = Lexer("");
     Parser parser = Parser(lexer);
 
-    std::cout << "Enter a mathematical expression (type 'exit' to quit)" << std::endl;
+    std::cout << "Enter a basic mathematical expression (or type 'exit' to quit)" << std::endl;
     while (true) {
         std::string input;
         std::cout << "> ";

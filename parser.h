@@ -2,6 +2,7 @@
 #define CPP_INTERPRETER_PARSER_H
 
 #include "lexer.h"
+#include <cmath>
 
 
 enum class ASTNodeType {

@@ -13,8 +13,20 @@ Token Lexer::getNextToken() {
         switch (input[pos]) {
             case '+': ++pos; return Token(TokenType::PLUS);
             case '-': ++pos; return Token(TokenType::MINUS);
-            case '*': ++pos; return Token(TokenType::ASTER);
-            case '/': ++pos; return Token(TokenType::SLASH);
+            case '*': {
+                if (input[++pos] == '*') {
+                    ++pos;
+                    return Token(TokenType::DBL_ASTER);
+                }
+                return Token(TokenType::ASTER);
+            }
+            case '/': {
+                if (input[++pos] == '/') {
+                    ++pos;
+                    return Token(TokenType::DBL_SLASH);
+                }
+                return Token(TokenType::SLASH);
+            }
             case '(': ++pos; return Token(TokenType::LPAREN);
             case ')': ++pos; return Token(TokenType::RPAREN);
             default:

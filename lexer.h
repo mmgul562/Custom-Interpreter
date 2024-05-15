@@ -13,7 +13,9 @@ enum class TokenType {
     PLUS,
     MINUS,
     ASTER,
+    DBL_ASTER,
     SLASH,
+    DBL_SLASH,
     LPAREN,
     RPAREN,
     END

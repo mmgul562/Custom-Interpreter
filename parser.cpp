@@ -12,7 +12,9 @@ double BinaryOpNode::evaluate() const {
         case TokenType::PLUS: return leftVal + rightVal;
         case TokenType::MINUS: return leftVal - rightVal;
         case TokenType::ASTER: return leftVal * rightVal;
+        case TokenType::DBL_ASTER: return pow(leftVal, rightVal);
         case TokenType::SLASH: return leftVal / rightVal;
+        case TokenType::DBL_SLASH: return floor(leftVal / rightVal);
         default:
             throw std::runtime_error("Unexpected operator");
     }
@@ -34,7 +36,8 @@ std::unique_ptr<ASTNode> Parser::parseExpression() {
 
 std::unique_ptr<ASTNode> Parser::parseTerm() {
     auto node = parseFactor();
-    while (currentToken.type == TokenType::ASTER || currentToken.type == TokenType::SLASH) {
+    while (currentToken.type == TokenType::ASTER ||currentToken.type == TokenType::SLASH
+            || currentToken.type == TokenType::DBL_ASTER || currentToken.type == TokenType::DBL_SLASH) {
         TokenType op = currentToken.type;
         advanceToken();
         node = std::make_unique<BinaryOpNode>(op, std::move(node), parseFactor());
