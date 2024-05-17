@@ -5,8 +5,9 @@ int main() {
     Parser parser = Parser(lexer);
 
     std::cout << "Enter a basic mathematical expression (or type 'exit' to quit)" << std::endl;
+    std::string input;
+
     while (true) {
-        std::string input;
         std::cout << "> ";
         std::getline(std::cin, input);
 
@@ -16,8 +17,8 @@ int main() {
 
         try {
             lexer.reset(input);
-            parser.reset();
-            auto ast = parser.parseExpression();
+            parser.advanceToken();
+            auto ast = parser.parseStatement();
             double result = ast->evaluate();
 
             std::cout << result << std::endl;

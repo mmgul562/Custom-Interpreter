@@ -10,7 +10,11 @@ Token Lexer::getNextToken() {
         if (isdigit(input[pos]) || input[pos] == '.') {
             return extractNumber();
         }
+        if (isalpha(input[pos])) {
+            return extractIdentifier();
+        }
         switch (input[pos]) {
+            case '=': ++pos; return Token(TokenType::ASSIGN);
             case '+': ++pos; return Token(TokenType::PLUS);
             case '-': ++pos; return Token(TokenType::MINUS);
             case '*': {
@@ -44,6 +48,14 @@ Token Lexer::extractNumber() {
         ++pos;
     }
     return Token(TokenType::NUMBER, std::stod(input.substr(start, pos - start)));
+}
+
+Token Lexer::extractIdentifier() {
+    size_t start = pos;
+    while (pos < input.length() && (isalnum(input[pos]))) {
+        ++pos;
+    }
+    return Token(TokenType::IDENTIFIER, input.substr(start, pos - start));
 }
 
 void Lexer::reset(const std::string& newInput) {

@@ -10,6 +10,8 @@
 
 enum class TokenType {
     NUMBER,
+    IDENTIFIER,
+    ASSIGN,
     PLUS,
     MINUS,
     ASTER,
@@ -25,18 +27,22 @@ class Token {
 public:
     TokenType type;
     double value;
+    std::string name;
 
-    explicit Token(TokenType type, double value = 0.0) : type(type), value(value) {}
+    Token(TokenType type, std::string name) : type(type), name(std::move(name)) {}
+    Token(TokenType type, double value = 0.0) : type(type), value(value) {}
 };
 
 
 class Lexer {
     std::string input;
-    size_t pos;
 
     Token extractNumber();
+    Token extractIdentifier();
 
 public:
+    size_t pos;
+
     void reset(const std::string& newInput);
     explicit Lexer(const std::string& input) : input(input), pos(0) {}
     Token getNextToken();

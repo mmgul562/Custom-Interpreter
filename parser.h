@@ -3,12 +3,18 @@
 
 #include "lexer.h"
 #include <cmath>
+#include <unordered_map>
+#include <utility>
+#include <typeinfo>
 
 
-enum class ASTNodeType {
-    NUMBER,
-    BINARY_OP
-};
+//enum class ASTNodeType {
+//    NUMBER,
+//    BINARY_OP,
+//    ASSIGN_NODE,
+//};
+
+bool isIdentified(const std::string &name);
 
 class ASTNode {
 public:
@@ -34,7 +40,19 @@ public:
     std::unique_ptr<ASTNode> right;
 
     BinaryOpNode(TokenType op, std::unique_ptr<ASTNode> left, std::unique_ptr<ASTNode> right)
-            : op(op), left(std::move(left)), right(std::move(right)) {}
+        : op(op), left(std::move(left)), right(std::move(right)) {}
+
+    double evaluate() const override;
+};
+
+
+class VariableNode : public ASTNode {
+public:
+    std::string name;
+    std::shared_ptr<ASTNode> value;
+
+    VariableNode(std::string name, std::shared_ptr<ASTNode> value);
+    explicit VariableNode(std::string name);
 
     double evaluate() const override;
 };
@@ -44,14 +62,14 @@ class Parser {
     Lexer& lexer;
     Token currentToken = lexer.getNextToken();
 
-    void advanceToken();
-    std::unique_ptr<ASTNode> parseFactor();
+    std::unique_ptr<ASTNode> parseExpression();
     std::unique_ptr<ASTNode> parseTerm();
+    std::unique_ptr<ASTNode> parseFactor();
 
 public:
     explicit Parser(Lexer& lexer) : lexer(lexer) {}
-    std::unique_ptr<ASTNode> parseExpression();
-    void reset();
+    void advanceToken();
+    std::unique_ptr<ASTNode> parseStatement();
 };
 
 

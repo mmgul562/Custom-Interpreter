@@ -1,6 +1,14 @@
 #include "parser.h"
 
 
+std::unordered_map<std::string, std::shared_ptr<ASTNode>> variableTable;
+
+bool isIdentified(const std::string &name) {
+    return variableTable.find(name) != variableTable.end();
+}
+
+// NODES
+
 double NumberNode::evaluate() const {
     return value;
 }
@@ -20,8 +28,42 @@ double BinaryOpNode::evaluate() const {
     }
 }
 
+VariableNode::VariableNode(std::string name, std::shared_ptr<ASTNode> value) {
+    variableTable[name] = value;
+    this->value = std::move(value);
+    this->name = std::move(name);
+}
+
+VariableNode::VariableNode(std::string name) {
+    this->value = variableTable[name];
+    this->name = std::move(name);
+}
+
+double VariableNode::evaluate() const {
+    return value->evaluate();
+}
+
+// PARSER
+
 void Parser::advanceToken() {
     currentToken = lexer.getNextToken();
+}
+
+std::unique_ptr<ASTNode> Parser::parseStatement() {
+    if (currentToken.type == TokenType::IDENTIFIER) {
+        std::string varName = currentToken.name;
+        advanceToken();
+        if (currentToken.type == TokenType::ASSIGN) {
+            advanceToken();
+            auto value = parseExpression();
+            return std::make_unique<VariableNode>(varName, std::move(value));
+        } else {
+            lexer.pos = 0;
+            advanceToken();
+            return parseExpression();
+        }
+    }
+    return parseExpression();
 }
 
 std::unique_ptr<ASTNode> Parser::parseExpression() {
@@ -36,7 +78,7 @@ std::unique_ptr<ASTNode> Parser::parseExpression() {
 
 std::unique_ptr<ASTNode> Parser::parseTerm() {
     auto node = parseFactor();
-    while (currentToken.type == TokenType::ASTER ||currentToken.type == TokenType::SLASH
+    while (currentToken.type == TokenType::ASTER || currentToken.type == TokenType::SLASH
             || currentToken.type == TokenType::DBL_ASTER || currentToken.type == TokenType::DBL_SLASH) {
         TokenType op = currentToken.type;
         advanceToken();
@@ -51,18 +93,22 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
         advanceToken();
         return node;
     }
+    if (currentToken.type == TokenType::IDENTIFIER) {
+        if (isIdentified(currentToken.name)) {
+            auto node = std::make_unique<VariableNode>(currentToken.name);
+            advanceToken();
+            return node;
+        }
+        throw std::runtime_error("Unidentified variable");
+    }
     if (currentToken.type == TokenType::LPAREN) {
         advanceToken();
         auto node = parseExpression();
         if (currentToken.type != TokenType::RPAREN) {
-            throw std::runtime_error("Closing parentheses not found");
+            throw std::runtime_error("Closing parentheses ')' not found in given expression");
         }
         advanceToken();
         return node;
     }
     throw std::runtime_error("Unexpected token");
-}
-
-void Parser::reset() {
-    advanceToken();
 }
