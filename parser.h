@@ -8,12 +8,6 @@
 #include <typeinfo>
 
 
-//enum class ASTNodeType {
-//    NUMBER,
-//    BINARY_OP,
-//    ASSIGN_NODE,
-//};
-
 bool isIdentified(const std::string &name);
 
 class ASTNode {
@@ -59,6 +53,7 @@ public:
 
 
 class Parser {
+private:
     Lexer& lexer;
     Token currentToken = lexer.getNextToken();
 

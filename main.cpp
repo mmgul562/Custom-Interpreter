@@ -3,9 +3,10 @@
 int main() {
     Lexer lexer = Lexer("");
     Parser parser = Parser(lexer);
+    std::string input;
+    double result;
 
     std::cout << "Enter a basic mathematical expression (or type 'exit' to quit)" << std::endl;
-    std::string input;
 
     while (true) {
         std::cout << "> ";
@@ -19,7 +20,7 @@ int main() {
             lexer.reset(input);
             parser.advanceToken();
             auto ast = parser.parseStatement();
-            double result = ast->evaluate();
+            result = ast->evaluate();
 
             std::cout << result << std::endl;
         } catch (const std::exception& e) {

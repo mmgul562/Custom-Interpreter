@@ -2,12 +2,13 @@
 
 
 Token Lexer::getNextToken() {
-    while (pos < input.length()) {
+    size_t length = input.length();
+    while (pos < length) {
         if (isspace(input[pos])) {
             ++pos;
             continue;
         }
-        if (isdigit(input[pos]) || input[pos] == '.') {
+        if (isdigit(input[pos])) {
             return extractNumber();
         }
         if (isalpha(input[pos])) {
@@ -16,7 +17,10 @@ Token Lexer::getNextToken() {
         switch (input[pos]) {
             case '=': ++pos; return Token(TokenType::ASSIGN);
             case '+': ++pos; return Token(TokenType::PLUS);
-            case '-': ++pos; return Token(TokenType::MINUS);
+            case '-': {
+                if (isdigit(input[++pos])) return extractNumber(true);
+                return Token(TokenType::MINUS);
+            }
             case '*': {
                 if (input[++pos] == '*') {
                     ++pos;
@@ -42,17 +46,20 @@ Token Lexer::getNextToken() {
     return Token(TokenType::END);
 }
 
-Token Lexer::extractNumber() {
+Token Lexer::extractNumber(bool negative) {
     size_t start = pos;
     while (pos < input.length() && (isdigit(input[pos]) || input[pos] == '.')) {
         ++pos;
+    }
+    if (negative) {
+        return Token(TokenType::NUMBER, -(std::stod(input.substr(start, pos - start))));
     }
     return Token(TokenType::NUMBER, std::stod(input.substr(start, pos - start)));
 }
 
 Token Lexer::extractIdentifier() {
     size_t start = pos;
-    while (pos < input.length() && (isalnum(input[pos]))) {
+    while (pos < input.length() && (isalnum(input[pos]) || input[pos] == '_')) {
         ++pos;
     }
     return Token(TokenType::IDENTIFIER, input.substr(start, pos - start));

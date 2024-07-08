@@ -56,14 +56,20 @@ std::unique_ptr<ASTNode> Parser::parseStatement() {
         if (currentToken.type == TokenType::ASSIGN) {
             advanceToken();
             auto value = parseExpression();
+            if (currentToken.type != TokenType::END) {
+                throw std::runtime_error("Unexpected token after assignment");
+            }
             return std::make_unique<VariableNode>(varName, std::move(value));
         } else {
             lexer.pos = 0;
             advanceToken();
-            return parseExpression();
         }
     }
-    return parseExpression();
+    auto exp = parseExpression();
+    if (currentToken.type != TokenType::END) {
+        throw std::runtime_error("Unexpected end of expression");
+    }
+    return exp;
 }
 
 std::unique_ptr<ASTNode> Parser::parseExpression() {

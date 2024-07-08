@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <cctype>
+#include <utility>
 #include <vector>
 #include <memory>
 
@@ -26,25 +27,26 @@ enum class TokenType {
 class Token {
 public:
     TokenType type;
-    double value;
+    double value{};
     std::string name;
 
     Token(TokenType type, std::string name) : type(type), name(std::move(name)) {}
-    Token(TokenType type, double value = 0.0) : type(type), value(value) {}
+    explicit Token(TokenType type, double value = 0.0) : type(type), value(value) {}
 };
 
 
 class Lexer {
+private:
     std::string input;
 
-    Token extractNumber();
+    Token extractNumber(bool negative=false);
     Token extractIdentifier();
 
 public:
     size_t pos;
 
     void reset(const std::string& newInput);
-    explicit Lexer(const std::string& input) : input(input), pos(0) {}
+    explicit Lexer(std::string input) : input(std::move(input)), pos(0) {}
     Token getNextToken();
 };
 
