@@ -21,10 +21,40 @@ Token Lexer::getNextToken() {
         }
         switch (input[pos]) {
             case '=':
-                ++pos;
+                if (input[++pos] == '=') {
+                    ++pos;
+                    return Token(TokenType::EQUAL);
+                }
                 return Token(TokenType::ASSIGN);
+            case '&':
+                ++pos;
+                return Token(TokenType::AND);
+            case '|':
+                ++pos;
+                return Token(TokenType::OR);
+            case '!':
+                if (input[++pos] == '=') {
+                    ++pos;
+                    return Token(TokenType::NOTEQ);
+                }
+                return Token(TokenType::NOT);
+            case '>':
+                if (input[++pos] == '=') {
+                    ++pos;
+                    return Token(TokenType::GTEQ);
+                }
+                return Token(TokenType::GT);
+            case '<':
+                if (input[++pos] == '=') {
+                    ++pos;
+                    return Token(TokenType::LTEQ);
+                }
+                return Token(TokenType::LT);
             case '"':
                 return extractString();
+            case '_':
+                ++pos;
+                return Token(TokenType::UNDERSCORE);
             case '+':
                 ++pos;
                 return Token(TokenType::PLUS);
@@ -32,6 +62,9 @@ Token Lexer::getNextToken() {
                 if (isdigit(input[++pos])) return extractNumber(true);
                 return Token(TokenType::MINUS);
             }
+            case '%':
+                ++pos;
+                return Token(TokenType::MOD);
             case '*': {
                 if (input[++pos] == '*') {
                     ++pos;
