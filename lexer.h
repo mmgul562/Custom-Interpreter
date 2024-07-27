@@ -8,10 +8,12 @@
 #include <vector>
 #include <memory>
 
-
 enum class TokenType {
     NUMBER,
     IDENTIFIER,
+    STRING,
+    TRUE,
+    FALSE,
     ASSIGN,
     PLUS,
     MINUS,
@@ -27,26 +29,43 @@ enum class TokenType {
 class Token {
 public:
     TokenType type;
-    double value{};
-    std::string name;
 
-    Token(TokenType type, std::string name) : type(type), name(std::move(name)) {}
-    explicit Token(TokenType type, double value = 0.0) : type(type), value(value) {}
+    union Value {
+        double numberValue;
+        bool boolValue;
+
+        Value() : numberValue(0.0) {}
+    } value;
+
+    std::string stringValue;
+
+    Token(TokenType type) : type(type) {}
+
+    Token(TokenType type, double value) : type(type) { this->value.numberValue = value; }
+
+    Token(TokenType type, bool value) : type(type) { this->value.boolValue = value; }
+
+    Token(TokenType type, std::string value) : type(type), stringValue(std::move(value)) {}
 };
-
 
 class Lexer {
 private:
     std::string input;
 
-    Token extractNumber(bool negative=false);
+    Token extractNumber(bool negative = false);
+
     Token extractIdentifier();
+
+    Token extractString();
 
 public:
     size_t pos;
+    size_t length;
 
-    void reset(const std::string& newInput);
-    explicit Lexer(std::string input) : input(std::move(input)), pos(0) {}
+    void reset(const std::string &newInput);
+
+    explicit Lexer(std::string input) : input(std::move(input)), pos(0), length(input.length()) {}
+
     Token getNextToken();
 };
 

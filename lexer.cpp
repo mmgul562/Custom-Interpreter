@@ -1,8 +1,6 @@
 #include "lexer.h"
 
-
 Token Lexer::getNextToken() {
-    size_t length = input.length();
     while (pos < length) {
         if (isspace(input[pos])) {
             ++pos;
@@ -12,11 +10,24 @@ Token Lexer::getNextToken() {
             return extractNumber();
         }
         if (isalpha(input[pos])) {
+            if (input.substr(pos, 4) == "true" && !std::isalnum(input[pos + 4])) {
+                pos += 4;
+                return Token(TokenType::TRUE, true);
+            } else if (input.substr(pos, 5) == "false" && !std::isalnum(input[pos + 5])) {
+                pos += 5;
+                return Token(TokenType::FALSE, false);
+            }
             return extractIdentifier();
         }
         switch (input[pos]) {
-            case '=': ++pos; return Token(TokenType::ASSIGN);
-            case '+': ++pos; return Token(TokenType::PLUS);
+            case '=':
+                ++pos;
+                return Token(TokenType::ASSIGN);
+            case '"':
+                return extractString();
+            case '+':
+                ++pos;
+                return Token(TokenType::PLUS);
             case '-': {
                 if (isdigit(input[++pos])) return extractNumber(true);
                 return Token(TokenType::MINUS);
@@ -35,12 +46,14 @@ Token Lexer::getNextToken() {
                 }
                 return Token(TokenType::SLASH);
             }
-            case '(': ++pos; return Token(TokenType::LPAREN);
-            case ')': ++pos; return Token(TokenType::RPAREN);
+            case '(':
+                ++pos;
+                return Token(TokenType::LPAREN);
+            case ')':
+                ++pos;
+                return Token(TokenType::RPAREN);
             default:
-                char err[23];
-                std::sprintf(err, "Unexpected character: %c", input[pos]);
-                throw std::runtime_error(err);
+                throw std::runtime_error(std::string("Unexpected character: ") + input[pos]);
         }
     }
     return Token(TokenType::END);
@@ -48,24 +61,36 @@ Token Lexer::getNextToken() {
 
 Token Lexer::extractNumber(bool negative) {
     size_t start = pos;
-    while (pos < input.length() && (isdigit(input[pos]) || input[pos] == '.')) {
+    while (pos < length && (isdigit(input[pos]) || input[pos] == '.')) {
         ++pos;
     }
-    if (negative) {
-        return Token(TokenType::NUMBER, -(std::stod(input.substr(start, pos - start))));
-    }
-    return Token(TokenType::NUMBER, std::stod(input.substr(start, pos - start)));
+    double number = std::stod(input.substr(start, pos - start));
+    return Token(TokenType::NUMBER, negative ? -number : number);
 }
 
 Token Lexer::extractIdentifier() {
     size_t start = pos;
-    while (pos < input.length() && (isalnum(input[pos]) || input[pos] == '_')) {
+    while (pos < length && (isalnum(input[pos]) || input[pos] == '_')) {
         ++pos;
     }
     return Token(TokenType::IDENTIFIER, input.substr(start, pos - start));
 }
 
-void Lexer::reset(const std::string& newInput) {
+Token Lexer::extractString() {
+    std::string str;
+    ++pos; // Skip opening quote
+    while (pos < length && input[pos] != '"') {
+        str += input[pos++];
+    }
+    if (pos == length) {
+        throw std::runtime_error("Unterminated string literal");
+    }
+    ++pos; // Skip closing quote
+    return Token(TokenType::STRING, str);
+}
+
+void Lexer::reset(const std::string &newInput) {
     input = newInput;
     pos = 0;
+    length = input.length();
 }
