@@ -1,0 +1,34 @@
+#ifndef CPP_INTERPRETER_PARSER_H
+#define CPP_INTERPRETER_PARSER_H
+
+#include "ast.h"
+
+
+class Parser {
+private:
+    Lexer &lexer;
+    std::shared_ptr<Scope> currentScope;
+
+    void skipNewLines();
+    std::unique_ptr<ASTNode> parseStatement();
+    std::unique_ptr<ASTNode> parseIfStatement();
+    std::unique_ptr<ASTNode> parseAssignment();
+    std::unique_ptr<BlockNode> parseBlock();
+    std::unique_ptr<ASTNode> parseExpression_1();
+    std::unique_ptr<ASTNode> parseExpression_2();
+    std::unique_ptr<ASTNode> parseExpression_3();
+    std::unique_ptr<ASTNode> parseTerm();
+    std::unique_ptr<ASTNode> parseFactor();
+
+public:
+    Token currentToken = lexer.getNextToken();
+
+    explicit Parser(Lexer &lexer) : lexer(lexer), currentScope(std::make_shared<Scope>()) {}
+
+    void advanceToken();
+    bool expectToken(TokenType type);
+    bool isStatementComplete();
+    std::vector<std::unique_ptr<ASTNode>> parse();
+};
+
+#endif
