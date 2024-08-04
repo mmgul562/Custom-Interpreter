@@ -9,11 +9,11 @@ std::string getTokenTypeName(TokenType type) {
         case TokenType::TRUE : return "TRUE";
         case TokenType::FALSE : return "FALSE";
         case TokenType::EQUAL : return "EQUAL";
-        case TokenType::NOTEQ : return "NOTEQ";
-        case TokenType::GT : return "GT";
-        case TokenType::LT : return "LT";
-        case TokenType::GTEQ : return "GTEQ";
-        case TokenType::LTEQ : return "LTEQ";
+        case TokenType::NOTEQ : return "NOT EQUAL";
+        case TokenType::GT : return "GREATER THAN";
+        case TokenType::LT : return "LESS THAN";
+        case TokenType::GTEQ : return "GREATER THAN OR EQUAL";
+        case TokenType::LTEQ : return "LESS THAN OR EQUAL";
         case TokenType::NOT : return "NOT";
         case TokenType::AND : return "AND";
         case TokenType::OR : return "OR";
@@ -21,50 +21,34 @@ std::string getTokenTypeName(TokenType type) {
         case TokenType::PLUS : return "PLUS";
         case TokenType::MINUS : return "MINUS";
         case TokenType::MOD : return "MOD";
-        case TokenType::ASTER : return "ASTER";
-        case TokenType::DBL_ASTER : return "DBL_ASTER";
+        case TokenType::ASTER : return "ASTERISK";
+        case TokenType::DBL_ASTER : return "DOUBLE ASTERISK";
         case TokenType::SLASH : return "SLASH";
-        case TokenType::DBL_SLASH : return "DBL_SLASH";
+        case TokenType::DBL_SLASH : return "DOUBLE SLASH";
         case TokenType::ASSIGN : return "ASSIGN";
         case TokenType::IF : return "IF";
         case TokenType::ELSE : return "ELSE";
         case TokenType::THEN : return "THEN";
         case TokenType::STOP : return "STOP";
         case TokenType::SEMICOLON : return "SEMICOLON";
-        case TokenType::BACKSLASH : return "BACKSLASH";
-        case TokenType::LPAREN : return "LPAREN";
-        case TokenType::RPAREN : return "RPAREN";
-        case TokenType::EOL : return "EOL";
+        case TokenType::COMMA: return "COMMA";
+        case TokenType::DOT: return "DOT";
+        case TokenType::LBRACKET: return "L BRACKET";
+        case TokenType::RBRACKET: return "R BRACKET";
+        case TokenType::LPAREN : return "L PARENTHESES";
+        case TokenType::RPAREN : return "R PARENTHESES";
+        case TokenType::EOL : return "END OF LINE";
         case TokenType::END : return "END";
         default: return "";
     }
 }
 
-size_t Lexer::isLineContinuation() const {
-    bool isBackslash = input[pos] == '\\';
-    if (isBackslash) {
-        size_t temp = pos + 1;
-        while (isspace(input[temp]) && input[temp] != '\n') {
-            ++temp;
-        }
-        if (input[temp++] == '\n') {
-            return temp - pos;
-        }
-    }
-    return 0;
-}
-
 Token Lexer::getNextToken() {
-    oldPos = pos;
     while (pos < length) {
         if (isspace(input[pos])) {
             if (input[pos++] == '\n') {
                 return Token(TokenType::EOL);
             }
-            continue;
-        }
-        if (size_t p = isLineContinuation()) {
-            pos += p;
             continue;
         }
         if (isdigit(input[pos])) {
@@ -73,10 +57,10 @@ Token Lexer::getNextToken() {
         if (isalpha(input[pos])) {
             if (input.substr(pos, 4) == "true" && !std::isalnum(input[pos + 4])) {
                 pos += 4;
-                return Token(TokenType::TRUE, true);
+                return Token(TokenType::TRUE, Value(true));
             } else if (input.substr(pos, 5) == "false" && !std::isalnum(input[pos + 5])) {
                 pos += 5;
-                return Token(TokenType::FALSE, false);
+                return Token(TokenType::FALSE, Value(false));
             } else if (input.substr(pos, 2) == "if" && !std::isalnum(input[pos + 2])) {
                 pos += 2;
                 return Token(TokenType::IF);
@@ -156,6 +140,22 @@ Token Lexer::getNextToken() {
                 }
                 return Token(TokenType::SLASH);
             }
+            case ',': {
+                ++pos;
+                return Token(TokenType::COMMA);
+            }
+            case '.': {
+                ++pos;
+                return Token(TokenType::DOT);
+            }
+            case '[': {
+                ++pos;
+                return Token(TokenType::LBRACKET);
+            }
+            case ']': {
+                ++pos;
+                return Token(TokenType::RBRACKET);
+            }
             case '(':
                 ++pos;
                 return Token(TokenType::LPAREN);
@@ -163,17 +163,16 @@ Token Lexer::getNextToken() {
                 ++pos;
                 return Token(TokenType::RPAREN);
             default:
-                throw std::runtime_error(std::string("Unexpected character: '") + input[pos] + "'");
+                throw LexerError(std::string("Unexpected character: '") + input[pos] + "'");
         }
     }
     return Token(TokenType::END);
 }
 
 TokenType Lexer::peekNextTokenType() {
-    size_t tempPos = pos, tempOldPos = oldPos;
+    size_t tempPos = pos;
     Token token = getNextToken();
     pos = tempPos;
-    oldPos = tempOldPos;
     return token.type;
 }
 
@@ -183,7 +182,7 @@ Token Lexer::extractNumber(bool negative) {
         ++pos;
     }
     double number = std::stod(input.substr(start, pos - start));
-    return Token(TokenType::NUMBER, negative ? -number : number);
+    return Token(TokenType::NUMBER, Value(negative ? -number : number));
 }
 
 Token Lexer::extractIdentifier() {
@@ -191,7 +190,7 @@ Token Lexer::extractIdentifier() {
     while (pos < length && (isalnum(input[pos]) || input[pos] == '_')) {
         ++pos;
     }
-    return Token(TokenType::IDENTIFIER, input.substr(start, pos - start));
+    return Token(TokenType::IDENTIFIER, Value(input.substr(start, pos - start)));
 }
 
 Token Lexer::extractString() {
@@ -212,10 +211,10 @@ Token Lexer::extractString() {
         }
     }
     if (pos == length) {
-        throw std::runtime_error("Unterminated string literal");
+        throw LexerError("Unterminated string literal");
     }
     ++pos;
-    return Token(TokenType::STRING, str);
+    return Token(TokenType::STRING, Value(str));
 }
 
 void Lexer::reset(const std::string &newInput) {

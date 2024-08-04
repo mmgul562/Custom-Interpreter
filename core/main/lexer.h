@@ -1,18 +1,10 @@
 #ifndef CPP_INTERPRETER_LEXER_H
 #define CPP_INTERPRETER_LEXER_H
 
-#include <iostream>
+#include "../value.h"
+#include "../../util/errors.h"
 #include <string>
-#include <vector>
-#include <variant>
-#include <memory>
 
-
-using Value = std::variant<double, std::string, bool>;
-
-inline void printValue(const Value& value) {
-    std::visit([](const auto& v) { std::cout << v << std::endl; }, value);
-}
 
 enum class TokenType {
     // VALUES
@@ -49,7 +41,10 @@ enum class TokenType {
     STOP,
     // GENERAL
     SEMICOLON,
-    BACKSLASH,
+    COMMA,
+    DOT,
+    LBRACKET,
+    RBRACKET,
     LPAREN,
     RPAREN,
     EOL,    // end of line
@@ -77,13 +72,11 @@ private:
 
 public:
     size_t pos;
-    size_t oldPos;
     size_t length;
 
-    explicit Lexer(std::string input) : input(std::move(input)), pos(0), oldPos(0), length(input.length()) {}
+    explicit Lexer(std::string input) : input(std::move(input)), pos(0), length(input.length()) {}
 
     void reset(const std::string &newInput);
-    size_t isLineContinuation() const;
     Token getNextToken();
     TokenType peekNextTokenType();
 };

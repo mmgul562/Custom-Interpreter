@@ -1,4 +1,7 @@
-#include "core/parser.h"
+#include "core/main/parser.h"
+
+#define RST  "\x1B[0m"
+#define RED  "\x1B[31m"
 
 
 int main() {
@@ -7,6 +10,7 @@ int main() {
     Parser parser(lexer);
     auto globalScope = std::make_shared<Scope>();
     std::string input;
+    bool continuation;
 
     std::cout << "Type 'exit' to quit" << std::endl;
     while (true) {
@@ -15,25 +19,36 @@ int main() {
         input.clear();
         do {
             std::getline(std::cin, line);
+            line.erase(line.find_last_not_of(" \t")+1);
             if (line == "exit" && input.empty()) {
                 return 0;
             }
-            input += line + "\n";
+            if (!line.empty() && line.back() == '\\') {
+                line.pop_back();
+                continuation = true;
+            } else {
+                continuation = false;
+            }
+            input += line;
+            if (!continuation) {
+                input += "\n";
+            }
             lexer.reset(input);
             parser.advanceToken();
-        } while (!parser.isStatementComplete());
+        } while (continuation || !parser.isStatementComplete());
 
         try {
-            lexer.reset(input);
-            parser.advanceToken();
             auto statements = parser.parse();
-            Value lastResult;
-            for (const auto& statement : statements) {
-                lastResult = statement->evaluate(globalScope);
+            Value result;
+            for (const auto &statement: statements) {
+                result = statement->evaluate(globalScope);
+                printValue(result);
+                std::cout << std::endl;
             }
-            printValue(lastResult);
+        } catch (const BaseError &e) {
+            std::cout << RED << e.what() << RST << std::endl;
         } catch (const std::exception &e) {
-            std::cout << "Error: " << e.what() << std::endl;
+            std::cout << RED << "Unexpected error: " << e.what() << RST << std::endl;
         }
     }
 }

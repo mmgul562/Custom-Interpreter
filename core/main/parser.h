@@ -9,10 +9,12 @@ private:
     Lexer &lexer;
     std::shared_ptr<Scope> currentScope;
 
-    void skipNewLines();
     std::unique_ptr<ASTNode> parseStatement();
     std::unique_ptr<ASTNode> parseIfStatement();
-    std::unique_ptr<ASTNode> parseAssignment();
+    std::unique_ptr<ASTNode> parseList();
+    std::unique_ptr<ASTNode> parseIndexAccess(std::unique_ptr<ASTNode> left);
+    std::unique_ptr<ASTNode> parseListMethodCall(std::unique_ptr<ASTNode> left);
+    std::unique_ptr<ASTNode> parseAssignment(std::string name);
     std::unique_ptr<BlockNode> parseBlock();
     std::unique_ptr<ASTNode> parseExpression_1();
     std::unique_ptr<ASTNode> parseExpression_2();
