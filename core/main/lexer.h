@@ -2,8 +2,6 @@
 #define CPP_INTERPRETER_LEXER_H
 
 #include "../value.h"
-#include "../../util/errors.h"
-#include <string>
 
 
 enum class TokenType {
@@ -41,8 +39,11 @@ enum class TokenType {
     STOP,
     // GENERAL
     SEMICOLON,
+    COLON,
     COMMA,
     DOT,
+    LBRACE,
+    RBRACE,
     LBRACKET,
     RBRACKET,
     LPAREN,

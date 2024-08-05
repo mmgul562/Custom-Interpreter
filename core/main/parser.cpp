@@ -115,7 +115,7 @@ std::unique_ptr<ASTNode> Parser::parseList() {
     return std::make_unique<ListNode>(std::move(elements));
 }
 
-std::unique_ptr<ASTNode> Parser::parseListMethodCall(std::unique_ptr<ASTNode> left) {
+std::unique_ptr<ASTNode> Parser::parseContainerMethodCall(std::unique_ptr<ASTNode> left) {
     advanceToken();
     if (currentToken.type != TokenType::IDENTIFIER) {
         throw SyntaxError("Expected method name after '.'");
@@ -135,7 +135,7 @@ std::unique_ptr<ASTNode> Parser::parseListMethodCall(std::unique_ptr<ASTNode> le
     if (!expectToken(TokenType::RPAREN)) {
         throw SyntaxError("Expected ')' after method arguments");
     }
-    return std::make_unique<ListMethodCallNode>(std::move(left), methodName, std::move(arguments));
+    return std::make_unique<ContainerMethodCallNode>(std::move(left), methodName, std::move(arguments));
 }
 
 std::unique_ptr<ASTNode> Parser::parseIndexAccess(std::unique_ptr<ASTNode> left) {
@@ -145,6 +145,28 @@ std::unique_ptr<ASTNode> Parser::parseIndexAccess(std::unique_ptr<ASTNode> left)
         throw SyntaxError("Expected ']' after index");
     }
     return std::make_unique<IndexAccessNode>(std::move(left), std::move(index));
+}
+
+std::unique_ptr<ASTNode> Parser::parseDict() {
+    std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements;
+
+    advanceToken();
+    while (currentToken.type != TokenType::RBRACE) {
+        auto key = parseExpression_1();
+        if (!expectToken(TokenType::COLON)) {
+            throw SyntaxError("Expected ':' after key when creating a dictionary");
+        }
+        auto value = parseExpression_1();
+        elements.emplace_back(std::move(key), std::move(value));
+        if (expectToken(TokenType::COMMA)) {
+            continue;
+        }
+        if (currentToken.type != TokenType::RBRACE) {
+            throw SyntaxError("Expected ',' or '}' in dictionary literal");
+        }
+    }
+    advanceToken();
+    return std::make_unique<DictNode>(std::move(elements));
 }
 
 // general parsing
@@ -228,10 +250,14 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     if (type == TokenType::LBRACKET) {
         return parseList();
     }
+    if (type == TokenType::LBRACE) {
+        return parseDict();
+    }
     if (type == TokenType::NOT || type == TokenType::UNDERSCORE) {
         advanceToken();
         return std::make_unique<UnaryOpNode>(type, parseFactor());
     }
+
     std::unique_ptr<ASTNode> node = nullptr;
     if (type == TokenType::NUMBER) {
         ValueBase value = currentToken.value.asBase();
@@ -252,7 +278,7 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     } else if (expectToken(TokenType::LPAREN)) {
         node = parseStatement();
         if (!expectToken(TokenType::RPAREN)) {
-            throw ParserError("Closing parentheses ')' not found");
+            throw SyntaxError("Matching closing parentheses ')' not found");
         }
     }
     while (currentToken.type == TokenType::LBRACKET || currentToken.type == TokenType::DOT) {
@@ -261,10 +287,10 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
 
             if (expectToken(TokenType::ASSIGN)) {
                 auto value = parseExpression_1();
-                node = std::make_unique<ListAssignmentNode>(std::move(node), std::move(value));
+                node = std::make_unique<IndexAssignmentNode>(std::move(node), std::move(value));
             }
         } else {
-            node = parseListMethodCall(std::move(node));
+            node = parseContainerMethodCall(std::move(node));
         }
     }
     if (!node) {

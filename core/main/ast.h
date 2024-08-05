@@ -101,35 +101,46 @@ public:
 
 class IndexAccessNode : public ASTNode {
 public:
-    std::unique_ptr<ASTNode> list;
+    std::unique_ptr<ASTNode> container;
     std::unique_ptr<ASTNode> index;
 
     IndexAccessNode(std::unique_ptr<ASTNode> list, std::unique_ptr<ASTNode> index)
-        : list(std::move(list)), index(std::move(index)) {}
+        : container(std::move(list)), index(std::move(index)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
-    Value& evaluateReference(std::shared_ptr<Scope> scope) const;
 };
 
-class ListAssignmentNode : public ASTNode {
+class IndexAssignmentNode : public ASTNode {
 public:
-    std::unique_ptr<ASTNode> listAccess;
+    std::unique_ptr<ASTNode> access;
     std::unique_ptr<ASTNode> value;
 
-    ListAssignmentNode(std::unique_ptr<ASTNode> listAccess, std::unique_ptr<ASTNode> value)
-        : listAccess(std::move(listAccess)), value(std::move(value)) {}
+    IndexAssignmentNode(std::unique_ptr<ASTNode> access, std::unique_ptr<ASTNode> value)
+        : access(std::move(access)), value(std::move(value)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };
 
-class ListMethodCallNode : public ASTNode {
+class DictNode : public ASTNode {
 public:
-    std::unique_ptr<ASTNode> list;
+    std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements;
+
+    explicit DictNode(std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements)
+        : elements(std::move(elements)) {}
+
+    Value evaluate(std::shared_ptr<Scope> scope) const override;
+};
+
+void updateNestedContainer(const std::unique_ptr<ASTNode>& node, const Value& updatedValue, std::shared_ptr<Scope> scope);
+
+class ContainerMethodCallNode : public ASTNode {
+public:
+    std::unique_ptr<ASTNode> container;
     std::string methodName;
     std::vector<std::unique_ptr<ASTNode>> arguments;
 
-    ListMethodCallNode(std::unique_ptr<ASTNode> list, std::string methodName, std::vector<std::unique_ptr<ASTNode>> arguments)
-        : list(std::move(list)), methodName(std::move(methodName)), arguments(std::move(arguments)) {}
+    ContainerMethodCallNode(std::unique_ptr<ASTNode> container, std::string methodName, std::vector<std::unique_ptr<ASTNode>> arguments)
+            : container(std::move(container)), methodName(std::move(methodName)), arguments(std::move(arguments)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };

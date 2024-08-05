@@ -31,8 +31,11 @@ std::string getTokenTypeName(TokenType type) {
         case TokenType::THEN : return "THEN";
         case TokenType::STOP : return "STOP";
         case TokenType::SEMICOLON : return "SEMICOLON";
+        case TokenType::COLON : return "COLON";
         case TokenType::COMMA: return "COMMA";
         case TokenType::DOT: return "DOT";
+        case TokenType::LBRACE: return "L BRACE";
+        case TokenType::RBRACE: return "R BRACE";
         case TokenType::LBRACKET: return "L BRACKET";
         case TokenType::RBRACKET: return "R BRACKET";
         case TokenType::LPAREN : return "L PARENTHESES";
@@ -129,16 +132,20 @@ Token Lexer::getNextToken() {
                 }
                 return Token(TokenType::ASTER);
             }
-            case ';': {
-                ++pos;
-                return Token(TokenType::SEMICOLON);
-            }
             case '/': {
                 if (input[++pos] == '/') {
                     ++pos;
                     return Token(TokenType::DBL_SLASH);
                 }
                 return Token(TokenType::SLASH);
+            }
+            case ';': {
+                ++pos;
+                return Token(TokenType::SEMICOLON);
+            }
+            case ':': {
+                ++pos;
+                return Token(TokenType::COLON);
             }
             case ',': {
                 ++pos;
@@ -147,6 +154,14 @@ Token Lexer::getNextToken() {
             case '.': {
                 ++pos;
                 return Token(TokenType::DOT);
+            }
+            case '{': {
+                ++pos;
+                return Token(TokenType::LBRACE);
+            }
+            case '}': {
+                ++pos;
+                return Token(TokenType::RBRACE);
             }
             case '[': {
                 ++pos;
