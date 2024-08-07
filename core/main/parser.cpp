@@ -77,7 +77,7 @@ std::unique_ptr<ASTNode> Parser::parseIfStatement() {
     if (expectToken(TokenType::ELSE)) {
         elseBlock = parseBlock();
     }
-    if  (!expectToken(TokenType::STOP)) {
+    if (!expectToken(TokenType::STOP)) {
         throw SyntaxError("Expected 'stop' at the end of if statement");
     }
     return std::make_unique<IfElseNode>(std::move(condition), std::move(ifBlock), std::move(elseBlock));
@@ -116,7 +116,8 @@ std::unique_ptr<ASTNode> Parser::parseForLoop() {
     if (!expectToken(TokenType::STOP)) {
         throw SyntaxError("Expected 'stop' at the end of for loop");
     }
-    return std::make_unique<ForLoopNode>(variableName, std::move(startExpr), std::move(endExpr), std::move(stepExpr), std::move(body), isRangeLoop);
+    return std::make_unique<ForLoopNode>(variableName, std::move(startExpr), std::move(endExpr), std::move(stepExpr),
+                                         std::move(body), isRangeLoop);
 }
 
 std::unique_ptr<ASTNode> Parser::parseWhileLoop() {
@@ -131,7 +132,7 @@ std::unique_ptr<ASTNode> Parser::parseWhileLoop() {
     }
 
     auto body = parseBlock();
-    if  (!expectToken(TokenType::STOP)) {
+    if (!expectToken(TokenType::STOP)) {
         throw SyntaxError("Expected 'stop' at the end of while loop");
     }
     return std::make_unique<WhileLoopNode>(std::move(condition), std::move(body));
@@ -234,7 +235,8 @@ std::vector<std::unique_ptr<ASTNode>> Parser::parse() {
         statements.push_back(parseStatement());
         if (currentToken.type != TokenType::SEMICOLON &&
             currentToken.type != TokenType::EOL) {
-            throw SyntaxError("Expected ';' or new line after statement but got " + getTypeName(currentToken.type) + " instead");
+            throw SyntaxError(
+                    "Expected ';' or new line after statement but got " + getTypeName(currentToken.type) + " instead");
         }
     }
     return statements;
@@ -315,7 +317,8 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
         return parseList();
     } else if (type == TokenType::LBRACE) {
         return parseDict();
-    } else if (type == TokenType::NOT || type == TokenType::UNDERSCORE) {
+    } else if (type == TokenType::NOT || type == TokenType::UNDERSCORE || type == TokenType::QUOTE
+               || type == TokenType::HASH || type == TokenType::QMARK) {
         advanceToken();
         return std::make_unique<UnaryOpNode>(type, parseFactor());
     }
@@ -352,7 +355,8 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     } else if (expectToken(TokenType::LPAREN)) {
         node = parseStatement();
         if (!expectToken(TokenType::RPAREN)) {
-            throw SyntaxError("Expected closing parentheses ')' but got " + getTypeName(currentToken.type) + " instead");
+            throw SyntaxError(
+                    "Expected closing parentheses ')' but got " + getTypeName(currentToken.type) + " instead");
         }
     }
     if (!node) {

@@ -13,6 +13,54 @@ Value BoolNode::evaluate(std::shared_ptr<Scope> scope) const {
     return Value(value);
 }
 
+std::string toString(const Value& value) {
+    if (value.isBase()) {
+        const auto& base = value.asBase();
+        if (std::holds_alternative<double>(base)) {
+            return std::to_string(std::get<double>(base));
+        } else if (std::holds_alternative<bool>(base)) {
+            return std::get<bool>(base) ? "true" : "false";
+        } else if (std::holds_alternative<std::string>(base)) {
+            return std::get<std::string>(base);
+        }
+    }
+    throw TypeError("Cannot convert non-basic types to string");
+}
+
+double toNumber(const Value& value) {
+    if (value.isBase()) {
+        const auto& base = value.asBase();
+        if (std::holds_alternative<double>(base)) {
+            return std::get<double>(base);
+        } else if (std::holds_alternative<bool>(base)) {
+            return std::get<bool>(base) ? 1.0 : 0.0;
+        } else if (std::holds_alternative<std::string>(base)) {
+            try {
+                return std::stod(std::get<std::string>(base));
+            } catch (const std::invalid_argument&) {
+                throw ConversionError("Cannot convert string to number: " + std::get<std::string>(base));
+            } catch (const std::out_of_range&) {
+                throw ConversionError("Number out of range: " + std::get<std::string>(base));
+            }
+        }
+    }
+    throw TypeError("Cannot convert non-basic types to number");
+}
+
+bool toBool(const Value& value) {
+    if (value.isBase()) {
+        const auto& base = value.asBase();
+        if (std::holds_alternative<double>(base)) {
+            return std::get<double>(base) != 0.0;
+        } else if (std::holds_alternative<bool>(base)) {
+            return std::get<bool>(base);
+        } else if (std::holds_alternative<std::string>(base)) {
+            return !std::get<std::string>(base).empty();
+        }
+    }
+    throw TypeError("Cannot convert non-basic types to boolean");
+}
+
 Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
     auto operandValue = operand->evaluate(scope);
     switch (op) {
@@ -26,6 +74,12 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                 return Value(std::abs(std::get<double>(operandValue.asBase())));
             }
             throw TypeError("UNDERSCORE (absolute) operator can only be applied to numbers");
+        case TokenType::QUOTE:
+            return Value(toString(operandValue));
+        case TokenType::HASH:
+            return Value(toNumber(operandValue));
+        case TokenType::QMARK:
+            return Value(toBool(operandValue));
         default:
             throw InterpreterError("Unexpected unary operator: " + getTypeName(op));
     }

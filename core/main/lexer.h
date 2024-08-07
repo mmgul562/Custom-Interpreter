@@ -11,6 +11,10 @@ enum class TokenType {
     STRING,
     TRUE,
     FALSE,
+    // CONVERSION
+    QUOTE,
+    HASH,
+    QMARK,
     // COMPARISON
     EQUAL,
     NOTEQ,

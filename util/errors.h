@@ -50,6 +50,11 @@ public:
     explicit ValueError(const std::string& message) : BaseError("Value error: " + message) {}
 };
 
+class ConversionError : public BaseError {
+public:
+    explicit ConversionError(const std::string& message) : BaseError("Conversion error: " + message) {}
+};
+
 // for break and continue
 class ControlFlowException : public BaseError {
 public:

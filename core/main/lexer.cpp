@@ -8,6 +8,9 @@ std::string getTypeName(TokenType type) {
         case TokenType::STRING : return "STRING";
         case TokenType::TRUE : return "TRUE";
         case TokenType::FALSE : return "FALSE";
+        case TokenType::QUOTE : return "SINGLE QUOTE";
+        case TokenType::HASH : return "HASH";
+        case TokenType::QMARK : return "QUESTION MARK";
         case TokenType::EQUAL : return "EQUAL";
         case TokenType::NOTEQ : return "NOT EQUAL";
         case TokenType::GT : return "GREATER THAN";
@@ -105,6 +108,15 @@ Token Lexer::getNextToken() {
             return extractIdentifier();
         }
         switch (input[pos]) {
+            case '\'':
+                ++pos;
+                return Token(TokenType::QUOTE);
+            case '#':
+                ++pos;
+                return Token(TokenType::HASH);
+            case '?':
+                ++pos;
+                return Token(TokenType::QMARK);
             case '=':
                 if (input[++pos] == '=') {
                     ++pos;
