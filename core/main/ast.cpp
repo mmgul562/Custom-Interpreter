@@ -68,12 +68,17 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
             if (operandValue.isBase() && std::holds_alternative<bool>(operandValue.asBase())) {
                 return Value(!std::get<bool>(operandValue.asBase()));
             }
-            throw TypeError("NOT operation can only be applied to boolean values");
+            throw TypeError("NOT operator can only be used with boolean values");
+        case TokenType::MINUS:
+            if (operandValue.isBase() && std::holds_alternative<double>(operandValue.asBase())) {
+                return Value(-std::get<double>(operandValue.asBase()));
+            }
+            throw TypeError("MINUS operator can only be used with numbers");
         case TokenType::UNDERSCORE:
             if (operandValue.isBase() && std::holds_alternative<double>(operandValue.asBase())) {
                 return Value(std::abs(std::get<double>(operandValue.asBase())));
             }
-            throw TypeError("UNDERSCORE (absolute) operator can only be applied to numbers");
+            throw TypeError("UNDERSCORE (absolute) operator can only be used with numbers");
         case TokenType::QUOTE:
             return Value(toString(operandValue));
         case TokenType::HASH:

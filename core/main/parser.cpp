@@ -318,7 +318,7 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     } else if (type == TokenType::LBRACE) {
         return parseDict();
     } else if (type == TokenType::NOT || type == TokenType::UNDERSCORE || type == TokenType::QUOTE
-               || type == TokenType::HASH || type == TokenType::QMARK) {
+               || type == TokenType::HASH || type == TokenType::QMARK || type == TokenType::MINUS) {
         advanceToken();
         return std::make_unique<UnaryOpNode>(type, parseFactor());
     }

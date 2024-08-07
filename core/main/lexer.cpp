@@ -156,7 +156,7 @@ Token Lexer::getNextToken() {
                 ++pos;
                 return Token(TokenType::PLUS);
             case '-': {
-                if (isdigit(input[++pos])) return extractNumber(true);
+                ++pos;
                 return Token(TokenType::MINUS);
             }
             case '%':
@@ -231,13 +231,13 @@ TokenType Lexer::peekNextTokenType() {
     return token.type;
 }
 
-Token Lexer::extractNumber(bool negative) {
+Token Lexer::extractNumber() {
     size_t start = pos;
     while (pos < length && (isdigit(input[pos]) || (input[pos] == '.' && input[pos + 1] != '.'))) {
         ++pos;
     }
     double number = std::stod(input.substr(start, pos - start));
-    return Token(TokenType::NUMBER, Value(negative ? -number : number));
+    return Token(TokenType::NUMBER, Value(number));
 }
 
 Token Lexer::extractIdentifier() {

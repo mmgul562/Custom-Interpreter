@@ -78,7 +78,7 @@ class Lexer {
 private:
     std::string input;
 
-    Token extractNumber(bool negative = false);
+    Token extractNumber();
     Token extractIdentifier();
     Token extractString();
 
