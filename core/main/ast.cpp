@@ -27,7 +27,7 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
             }
             throw TypeError("UNDERSCORE (absolute) operator can only be applied to numbers");
         default:
-            throw InterpreterError("Unexpected unary operator: " + getTokenTypeName(op));
+            throw InterpreterError("Unexpected unary operator: " + getTypeName(op));
     }
 }
 
@@ -58,7 +58,7 @@ Value BinaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                 case TokenType::SLASH: return Value(lhs / rhs);
                 case TokenType::DBL_SLASH: return Value(std::floor(lhs / rhs));
                 default:
-                    throw InterpreterError("Unexpected operator for number values: " + getTokenTypeName(op));
+                    throw InterpreterError("Unexpected operator for number values: " + getTypeName(op));
             }
         } else if (std::holds_alternative<std::string>(leftBase) && std::holds_alternative<std::string>(rightBase)) {
             const auto& lhs = std::get<std::string>(leftBase);
@@ -73,7 +73,7 @@ Value BinaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                 case TokenType::LT: return Value(lhs.length() < rhs.length());
                 case TokenType::LTEQ: return Value(lhs.length() <= rhs.length());
                 default:
-                    throw InterpreterError("Unexpected operator for string values: " + getTokenTypeName(op));
+                    throw InterpreterError("Unexpected operator for string values: " + getTypeName(op));
             }
         } else if (std::holds_alternative<bool>(leftBase) && std::holds_alternative<bool>(rightBase)) {
             bool lhs = std::get<bool>(leftBase);
@@ -84,11 +84,11 @@ Value BinaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                 case TokenType::AND: return Value(lhs && rhs);
                 case TokenType::OR: return Value(lhs || rhs);
                 default:
-                    throw InterpreterError("Unexpected operator for boolean values: " + getTokenTypeName(op));
+                    throw InterpreterError("Unexpected operator for boolean values: " + getTypeName(op));
             }
         }
     }
-    throw InterpreterError("Unexpected binary operation: " + getTokenTypeName(op));
+    throw InterpreterError("Unexpected binary operation: " + getTypeName(op));
 }
 
 Value AssignmentNode::evaluate(std::shared_ptr<Scope> scope) const {
@@ -123,6 +123,19 @@ Value ListNode::evaluate(std::shared_ptr<Scope> scope) const {
     return Value(result);
 }
 
+Value DictNode::evaluate(std::shared_ptr<Scope> scope) const {
+    ValueDict dict;
+    for (const auto& [keyNode, valueNode] : elements) {
+        Value key = keyNode->evaluate(scope);
+        if (!key.isBase()) {
+            throw TypeError("Dictionary key must be a basic type");
+        }
+        Value value = valueNode->evaluate(scope);
+        dict[key.asBase()] = std::make_shared<Value>(value);
+    }
+    return Value(std::move(dict));
+}
+
 Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
     Value containerValue = container->evaluate(scope);
     Value indexValue = index->evaluate(scope);
@@ -132,6 +145,9 @@ Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
             throw TypeError("List index must be a number");
         }
         int idx = static_cast<int>(std::get<double>(indexValue.asBase()));
+        if (idx >= containerValue.asList().size()) {
+            throw IndexError("Index out of range");
+        }
         return *containerValue.asList()[idx];
     } else if (containerValue.isDict()) {
         if (!indexValue.isBase()) {
@@ -204,9 +220,9 @@ Value ContainerMethodCallNode::evaluate(std::shared_ptr<Scope> scope) const {
     Value containerValue = container->evaluate(scope);
 
     if (containerValue.isList()) {
-        if (methodName == "length") {
+        if (methodName == "len") {
             if (!arguments.empty()) {
-                throw SyntaxError("length() method doesn't take any arguments");
+                throw SyntaxError("len() method doesn't take any arguments");
             }
             return Value(static_cast<double>(containerValue.length()));
         } else if (methodName == "append") {
@@ -274,19 +290,6 @@ Value ContainerMethodCallNode::evaluate(std::shared_ptr<Scope> scope) const {
     return containerValue;
 }
 
-Value DictNode::evaluate(std::shared_ptr<Scope> scope) const {
-    ValueDict dict;
-    for (const auto& [keyNode, valueNode] : elements) {
-        Value key = keyNode->evaluate(scope);
-        if (!key.isBase()) {
-            throw TypeError("Dictionary key must be a basic type");
-        }
-        Value value = valueNode->evaluate(scope);
-        dict[key.asBase()] = std::make_shared<Value>(value);
-    }
-    return Value(std::move(dict));
-}
-
 Value BlockNode::evaluate(std::shared_ptr<Scope> scope) const {
     auto blockScope = scope->createChildScope();
     Value lastValue;
@@ -308,4 +311,95 @@ Value IfElseNode::evaluate(std::shared_ptr<Scope> scope) const {
         throw SyntaxError("Expected boolean expression after 'if'");
     }
     return Value();
+}
+
+Value ForLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
+    auto loopScope = scope->createChildScope();
+    Value lastValue;
+
+    if (isRangeLoop) {
+        Value startValue = startExpr->evaluate(scope);
+        Value endValue = endExpr->evaluate(scope);
+
+        if (!startValue.isBase() || !std::holds_alternative<double>(startValue.asBase()) ||
+            !endValue.isBase() || !std::holds_alternative<double>(endValue.asBase())) {
+            throw TypeError("Loop range must be numbers");
+        }
+
+        int start = static_cast<int>(std::get<double>(startValue.asBase()));
+        int end = static_cast<int>(std::get<double>(endValue.asBase()));
+        int step = 1;
+
+        if (stepExpr) {
+            Value stepValue = stepExpr->evaluate(scope);
+            if (!stepValue.isBase() || !std::holds_alternative<double>(stepValue.asBase())) {
+                throw TypeError("Loop step must be a number");
+            }
+            step = static_cast<int>(std::get<double>(stepValue.asBase()));
+            if (step == 0) {
+                throw ValueError("Loop step cannot be zero");
+            }
+        } else {
+            step = (start <= end) ? 1 : -1;
+        }
+
+        if ((step > 0 && start > end) || (step < 0 && start < end)) {
+            throw ValueError("Invalid loop range and step combination");
+        }
+        for (int i = start; (step > 0) ? (i <= end) : (i >= end); i += step) {
+            loopScope->setVariable(variableName, Value(static_cast<double>(i)));
+            try {
+                lastValue = body->evaluate(loopScope);
+            } catch (const ControlFlowException &e) {
+                if (e.what() == std::string("BREAK")) break;
+                if (e.what() == std::string("CONTINUE")) continue;
+            }
+        }
+    } else {
+        Value iterableValue = startExpr->evaluate(scope);
+        if (!iterableValue.isDict()) {
+            throw TypeError("Cannot iterate: not a dictionary");
+        }
+        std::vector<ValueBase> keys = iterableValue.getDictKeys();
+        for (const auto& key : keys) {
+            loopScope->setVariable(variableName, Value(key));
+            try {
+                lastValue = body->evaluate(loopScope);
+            } catch (const ControlFlowException &e) {
+                if (e.what() == std::string("BREAK")) break;
+                if (e.what() == std::string("CONTINUE")) continue;
+            }
+        }
+    }
+    return lastValue;
+}
+
+Value WhileLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
+    Value cond = condition->evaluate(scope);
+    Value lastValue;
+    int maxIterations = 999999;
+
+    if (cond.isBase() && std::holds_alternative<bool>(cond.asBase())) {
+        while (std::get<bool>(cond.asBase()) && maxIterations > 0) {
+            try {
+                lastValue = body->evaluate(scope);
+            } catch (const ControlFlowException &e) {
+                if (e.what() == std::string("BREAK")) break;
+                if (e.what() == std::string("CONTINUE")) continue;
+            }
+            cond = condition->evaluate(scope);
+            maxIterations--;
+        }
+    } else {
+        throw SyntaxError("Expected boolean expression after 'while'");
+    }
+    return lastValue;
+}
+
+Value ControlFlowNode::evaluate(std::shared_ptr<Scope> scope) const {
+    if (isBreak) {
+        throw ControlFlowException("BREAK");
+    } else {
+        throw ControlFlowException("CONTINUE");
+    }
 }

@@ -45,4 +45,15 @@ public:
     explicit IndexError(const std::string& message) : BaseError("Index error: " + message) {}
 };
 
+class  ValueError : public BaseError {
+public:
+    explicit ValueError(const std::string& message) : BaseError("Value error: " + message) {}
+};
+
+// for break and continue
+class ControlFlowException : public BaseError {
+public:
+    explicit ControlFlowException(const std::string& type) : BaseError(type) {}
+};
+
 #endif

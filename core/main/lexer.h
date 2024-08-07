@@ -36,12 +36,19 @@ enum class TokenType {
     IF,
     ELSE,
     THEN,
+    FOR,
+    IN,
+    WHILE,
+    DO,
+    BREAK,
+    CONTINUE,
     STOP,
     // GENERAL
     SEMICOLON,
     COLON,
     COMMA,
     DOT,
+    DBL_DOT,
     LBRACE,
     RBRACE,
     LBRACKET,
@@ -52,7 +59,7 @@ enum class TokenType {
     END
 };
 
-std::string getTokenTypeName(TokenType type);
+std::string getTypeName(TokenType type);
 
 class Token {
 public:

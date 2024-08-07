@@ -45,6 +45,8 @@ int main() {
                 printValue(result);
                 std::cout << std::endl;
             }
+        } catch (const ControlFlowException &e) {
+            std::cout << RED << "Syntax error: Use of " + std::string(e.what()) + " outside of loops" << std::endl;
         } catch (const BaseError &e) {
             std::cout << RED << e.what() << RST << std::endl;
         } catch (const std::exception &e) {

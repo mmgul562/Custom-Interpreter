@@ -94,7 +94,17 @@ public:
     std::vector<std::unique_ptr<ASTNode>> elements;
 
     explicit ListNode(std::vector<std::unique_ptr<ASTNode>> elements)
-        : elements(std::move(elements)) {}
+            : elements(std::move(elements)) {}
+
+    Value evaluate(std::shared_ptr<Scope> scope) const override;
+};
+
+class DictNode : public ASTNode {
+public:
+    std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements;
+
+    explicit DictNode(std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements)
+            : elements(std::move(elements)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };
@@ -105,7 +115,7 @@ public:
     std::unique_ptr<ASTNode> index;
 
     IndexAccessNode(std::unique_ptr<ASTNode> list, std::unique_ptr<ASTNode> index)
-        : container(std::move(list)), index(std::move(index)) {}
+            : container(std::move(list)), index(std::move(index)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };
@@ -116,22 +126,13 @@ public:
     std::unique_ptr<ASTNode> value;
 
     IndexAssignmentNode(std::unique_ptr<ASTNode> access, std::unique_ptr<ASTNode> value)
-        : access(std::move(access)), value(std::move(value)) {}
+            : access(std::move(access)), value(std::move(value)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };
 
-class DictNode : public ASTNode {
-public:
-    std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements;
-
-    explicit DictNode(std::vector<std::pair<std::unique_ptr<ASTNode>, std::unique_ptr<ASTNode>>> elements)
-        : elements(std::move(elements)) {}
-
-    Value evaluate(std::shared_ptr<Scope> scope) const override;
-};
-
-void updateNestedContainer(const std::unique_ptr<ASTNode>& node, const Value& updatedValue, std::shared_ptr<Scope> scope);
+void
+updateNestedContainer(const std::unique_ptr<ASTNode> &node, const Value &updatedValue, std::shared_ptr<Scope> scope);
 
 class ContainerMethodCallNode : public ASTNode {
 public:
@@ -139,7 +140,8 @@ public:
     std::string methodName;
     std::vector<std::unique_ptr<ASTNode>> arguments;
 
-    ContainerMethodCallNode(std::unique_ptr<ASTNode> container, std::string methodName, std::vector<std::unique_ptr<ASTNode>> arguments)
+    ContainerMethodCallNode(std::unique_ptr<ASTNode> container, std::string methodName,
+                            std::vector<std::unique_ptr<ASTNode>> arguments)
             : container(std::move(container)), methodName(std::move(methodName)), arguments(std::move(arguments)) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
@@ -167,6 +169,47 @@ public:
             : condition(std::move(condition)),
               ifBlock(std::move(ifBlock)),
               elseBlock(std::move(elseBlock)) {}
+
+    Value evaluate(std::shared_ptr<Scope> scope) const override;
+};
+
+class ForLoopNode : public ASTNode {
+public:
+    std::string variableName;
+    std::unique_ptr<ASTNode> startExpr;
+    std::unique_ptr<ASTNode> endExpr;
+    std::unique_ptr<ASTNode> stepExpr;
+    std::unique_ptr<BlockNode> body;
+    bool isRangeLoop;
+
+    ForLoopNode(std::string variableName, std::unique_ptr<ASTNode> startExpr,
+                std::unique_ptr<ASTNode> endExpr, std::unique_ptr<ASTNode> stepExpr,
+                std::unique_ptr<BlockNode> body, bool isRangeLoop)
+            : variableName(std::move(variableName)), startExpr(std::move(startExpr)),
+              endExpr(std::move(endExpr)), stepExpr(std::move(stepExpr)),
+              body(std::move(body)), isRangeLoop(isRangeLoop) {}
+
+    Value evaluate(std::shared_ptr<Scope> scope) const override;
+};
+
+class WhileLoopNode : public ASTNode {
+public:
+    std::unique_ptr<ASTNode> condition;
+    std::unique_ptr<BlockNode> body;
+
+    WhileLoopNode(std::unique_ptr<ASTNode> boolExpr,
+                  std::unique_ptr<BlockNode> body)
+            : condition(std::move(boolExpr)),
+              body(std::move(body)) {}
+
+    Value evaluate(std::shared_ptr<Scope> scope) const override;
+};
+
+class ControlFlowNode : public ASTNode {
+public:
+    bool isBreak;   // false for continue
+
+    explicit ControlFlowNode(bool isBreak) : isBreak(isBreak) {}
 
     Value evaluate(std::shared_ptr<Scope> scope) const override;
 };

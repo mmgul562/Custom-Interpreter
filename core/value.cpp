@@ -83,6 +83,17 @@ bool Value::keyExists(const ValueBase& key) const {
     return asDict().find(key) != asDict().end();
 }
 
+std::vector<ValueBase> Value::getDictKeys() const {
+    if (!isDict()) {
+        throw TypeError("Cannot get keys: not a dictionary");
+    }
+    std::vector<ValueBase> keys;
+    for (const auto& pair : asDict()) {
+        keys.push_back(pair.first);
+    }
+    return keys;
+}
+
 // printing
 
 void printList(const ValueList& list) {

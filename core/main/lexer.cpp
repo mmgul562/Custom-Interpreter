@@ -1,7 +1,7 @@
 #include "lexer.h"
 
 
-std::string getTokenTypeName(TokenType type) {
+std::string getTypeName(TokenType type) {
     switch (type) {
         case TokenType::NUMBER : return "NUMBER";
         case TokenType::IDENTIFIER : return "IDENTIFIER";
@@ -29,11 +29,18 @@ std::string getTokenTypeName(TokenType type) {
         case TokenType::IF : return "IF";
         case TokenType::ELSE : return "ELSE";
         case TokenType::THEN : return "THEN";
+        case TokenType::FOR : return "FOR";
+        case TokenType::IN : return "IN";
+        case TokenType::WHILE : return "WHILE";
+        case TokenType::DO : return "DO";
+        case TokenType::BREAK : return "BREAK";
+        case TokenType::CONTINUE : return "CONTINUE";
         case TokenType::STOP : return "STOP";
         case TokenType::SEMICOLON : return "SEMICOLON";
         case TokenType::COLON : return "COLON";
         case TokenType::COMMA: return "COMMA";
         case TokenType::DOT: return "DOT";
+        case TokenType::DBL_DOT: return "DOUBLE DOT";
         case TokenType::LBRACE: return "L BRACE";
         case TokenType::RBRACE: return "R BRACE";
         case TokenType::LBRACKET: return "L BRACKET";
@@ -73,6 +80,24 @@ Token Lexer::getNextToken() {
             } else if (input.substr(pos, 4) == "then" && !std::isalnum(input[pos + 4])) {
                 pos += 4;
                 return Token(TokenType::THEN);
+            } else if (input.substr(pos, 3) == "for" && !std::isalnum(input[pos + 3])) {
+                pos += 3;
+                return Token(TokenType::FOR);
+            } else if (input.substr(pos, 2) == "in" && !std::isalnum(input[pos + 2])) {
+                pos += 2;
+                return Token(TokenType::IN);
+            } else if (input.substr(pos, 5) == "while" && !std::isalnum(input[pos + 5])) {
+                pos += 5;
+                return Token(TokenType::WHILE);
+            } else if (input.substr(pos, 2) == "do" && !std::isalnum(input[pos + 2])) {
+                pos += 2;
+                return Token(TokenType::DO);
+            } else if (input.substr(pos, 5) == "break" && !std::isalnum(input[pos + 5])) {
+                pos += 5;
+                return Token(TokenType::BREAK);
+            } else if (input.substr(pos, 8) == "continue" && !std::isalnum(input[pos + 8])) {
+                pos += 8;
+                return Token(TokenType::CONTINUE);
             } else if (input.substr(pos, 4) == "stop" && !std::isalnum(input[pos + 4])) {
                 pos += 4;
                 return Token(TokenType::STOP);
@@ -152,7 +177,10 @@ Token Lexer::getNextToken() {
                 return Token(TokenType::COMMA);
             }
             case '.': {
-                ++pos;
+                if (input[++pos] == '.') {
+                    ++pos;
+                    return Token(TokenType::DBL_DOT);
+                }
                 return Token(TokenType::DOT);
             }
             case '{': {
@@ -193,7 +221,7 @@ TokenType Lexer::peekNextTokenType() {
 
 Token Lexer::extractNumber(bool negative) {
     size_t start = pos;
-    while (pos < length && (isdigit(input[pos]) || input[pos] == '.')) {
+    while (pos < length && (isdigit(input[pos]) || (input[pos] == '.' && input[pos + 1] != '.'))) {
         ++pos;
     }
     double number = std::stod(input.substr(start, pos - start));

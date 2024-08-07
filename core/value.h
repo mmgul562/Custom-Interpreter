@@ -73,6 +73,7 @@ public:
     size_t dictSize() const;
     void removeKey(const ValueBase& key);
     bool keyExists(const ValueBase& key) const;
+    std::vector<ValueBase> getDictKeys() const;
 };
 
 void printValueBase(const ValueBase& v);

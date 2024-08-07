@@ -11,6 +11,8 @@ private:
 
     std::unique_ptr<ASTNode> parseAssignment(std::string name);
     std::unique_ptr<ASTNode> parseIfStatement();
+    std::unique_ptr<ASTNode> parseForLoop();
+    std::unique_ptr<ASTNode> parseWhileLoop();
     std::unique_ptr<BlockNode> parseBlock();
     std::unique_ptr<ASTNode> parseList();
     std::unique_ptr<ASTNode> parseIndexAccess(std::unique_ptr<ASTNode> left);
