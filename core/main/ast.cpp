@@ -1,3 +1,4 @@
+#include "../../util/errors.h"
 #include "ast.h"
 
 
@@ -204,7 +205,7 @@ Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
             throw TypeError("List index must be a number");
         }
         int idx = static_cast<int>(std::get<double>(indexValue.asBase()));
-        if (idx >= containerValue.asList().size()) {
+        if (idx >= containerValue.asList().size() || idx < 0) {
             throw IndexError("Index out of range");
         }
         return *containerValue.asList()[idx];
@@ -353,7 +354,11 @@ Value BlockNode::evaluate(std::shared_ptr<Scope> scope) const {
     auto blockScope = scope->createChildScope();
     Value lastValue;
     for (const auto& statement : statements) {
-        lastValue = statement->evaluate(blockScope);
+        try {
+            lastValue = statement->evaluate(blockScope);
+        } catch (const ReturnException& e) {
+            throw;
+        }
     }
     return lastValue;
 }
@@ -387,7 +392,7 @@ Value ForLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
 
         int start = static_cast<int>(std::get<double>(startValue.asBase()));
         int end = static_cast<int>(std::get<double>(endValue.asBase()));
-        int step = 1;
+        int step;
 
         if (stepExpr) {
             Value stepValue = stepExpr->evaluate(scope);
@@ -460,5 +465,42 @@ Value ControlFlowNode::evaluate(std::shared_ptr<Scope> scope) const {
         throw ControlFlowException("BREAK");
     } else {
         throw ControlFlowException("CONTINUE");
+    }
+}
+
+Value ReturnNode::evaluate(std::shared_ptr<Scope> scope) const {
+    if (expression) {
+        Value result = expression->evaluate(scope);
+        throw ReturnException(result);
+    }
+    throw ReturnException(Value());  // Return without value
+}
+
+Value FunctionDeclarationNode::evaluate(std::shared_ptr<Scope> scope) const {
+    scope->setFunction(name, std::make_shared<FunctionDeclarationNode>(*this));
+    return Value();
+}
+
+Value FunctionCallNode::evaluate(std::shared_ptr<Scope> scope) const {
+    std::shared_ptr<FunctionDeclarationNode> func = scope->getFunction(name);
+    if (!func) {
+        throw NameError("Unidentified function: " + name);
+    }
+
+    size_t paramSize = func->parameters.size(), argSize = arguments.size();
+    if (paramSize != argSize) {
+        throw ValueError("Function " + name + " expects " + std::to_string(paramSize) + " arguments, but got " + std::to_string(argSize));
+    }
+
+    auto childScope = scope->createChildScope();
+    for (size_t i = 0; i < paramSize; ++i) {
+        Value argumentValue = arguments[i]->evaluate(scope);
+        childScope->setVariable(func->parameters[i], argumentValue);
+    }
+
+    try {
+        return func->body->evaluate(childScope);
+    } catch (const ReturnException& e) {
+        return e.returnValue;
     }
 }

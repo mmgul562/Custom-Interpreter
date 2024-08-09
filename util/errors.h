@@ -1,6 +1,7 @@
 #ifndef CPP_INTERPRETER_ERRORS_H
 #define CPP_INTERPRETER_ERRORS_H
 
+#include "../core/value.h"
 #include <stdexcept>
 #include <string>
 
@@ -59,6 +60,13 @@ public:
 class ControlFlowException : public BaseError {
 public:
     explicit ControlFlowException(const std::string& type) : BaseError(type) {}
+};
+
+class ReturnException : public std::exception {
+public:
+    Value returnValue;
+
+    explicit ReturnException(Value value) : returnValue(std::move(value)) {}
 };
 
 #endif

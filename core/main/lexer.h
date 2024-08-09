@@ -44,8 +44,11 @@ enum class TokenType {
     IN,
     WHILE,
     DO,
+    DEF,
+    AS,
     BREAK,
     CONTINUE,
+    RETURN,
     STOP,
     // GENERAL
     SEMICOLON,

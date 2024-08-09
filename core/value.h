@@ -1,7 +1,6 @@
 #ifndef CPP_INTERPRETER_VALUE_H
 #define CPP_INTERPRETER_VALUE_H
 
-#include "../util/errors.h"
 #include <iostream>
 #include <variant>
 #include <vector>
@@ -9,6 +8,7 @@
 #include <memory>
 
 class Value;
+class FunctionDeclarationNode;
 using ValueBase = std::variant<double, std::string, bool>;
 using ValueList = std::vector<std::shared_ptr<Value>>;
 using ValueDict = std::unordered_map<ValueBase, std::shared_ptr<Value>>;

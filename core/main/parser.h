@@ -18,6 +18,8 @@ private:
     std::unique_ptr<ASTNode> parseIndexAccess(std::unique_ptr<ASTNode> left);
     std::unique_ptr<ASTNode> parseContainerMethodCall(std::unique_ptr<ASTNode> left);
     std::unique_ptr<ASTNode> parseDict();
+    std::unique_ptr<ASTNode> parseFunctionDeclaration();
+    std::unique_ptr<ASTNode> parseFunctionCall(const std::string& name);
     std::unique_ptr<ASTNode> parseStatement();
     std::unique_ptr<ASTNode> parseExpression_1();
     std::unique_ptr<ASTNode> parseExpression_2();

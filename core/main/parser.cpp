@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "../../util/errors.h"
 
 
 bool Parser::expectToken(TokenType type) {
@@ -23,34 +24,57 @@ void Parser::advanceToken() {
 bool Parser::isStatementComplete() {
     int nestedLevel = 0;
     Token tempToken = currentToken;
+    TokenType type = tempToken.type;
     size_t tempPos = lexer.pos;
-    bool checkThen = false;
-    bool checkDo = false;
+    bool checkThen = false, checkDo = false, checkAs = false;
 
-    while (tempToken.type != TokenType::END) {
-        if (tempToken.type == TokenType::IF) {
-            checkThen = true;
-            nestedLevel++;
-        } else if (checkThen && tempToken.type == TokenType::THEN) {
-            checkThen = false;
-        } else if (tempToken.type == TokenType::FOR) {
-            checkDo = true;
-            nestedLevel++;
-        } else if (tempToken.type == TokenType::WHILE) {
-            checkDo = true;
-            nestedLevel++;
-        } else if (tempToken.type == TokenType::DO) {
-            checkDo = false;
-        } else if (tempToken.type == TokenType::STOP) {
-            if (nestedLevel == 0) break;
-            nestedLevel--;
-        } else if (nestedLevel == 0) {
-            break;
+    while (type != TokenType::END) {
+        type = tempToken.type;
+        switch (type) {
+            case TokenType::IF: {
+                checkThen = true;
+                ++nestedLevel;
+                break;
+            }
+            case TokenType::FOR :
+            case TokenType::WHILE : {
+                checkDo = true;
+                ++nestedLevel;
+                break;
+            }
+            case TokenType::DEF : {
+                checkAs = true;
+                ++nestedLevel;
+                break;
+            }
+            case TokenType::THEN : {
+                checkThen = false;
+                break;
+            }
+            case TokenType::DO : {
+                checkDo = false;
+                break;
+            }
+            case TokenType::AS : {
+                checkAs = false;
+                break;
+            }
+            case TokenType::STOP : {
+                nestedLevel--;
+                break;
+            }
+            default: {
+            }
         }
-        tempToken = lexer.getNextToken();
+        if (nestedLevel == 0) break;
+        try {
+            tempToken = lexer.getNextToken();
+        } catch (const LexerError &e) {
+            throw;
+        }
     }
     lexer.pos = tempPos;
-    return nestedLevel == 0 || checkThen || checkDo;
+    return nestedLevel == 0 || checkThen || checkDo || checkAs;
 }
 
 // specific parsing
@@ -224,6 +248,59 @@ std::unique_ptr<ASTNode> Parser::parseDict() {
     return std::make_unique<DictNode>(std::move(elements));
 }
 
+std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
+    advanceToken();
+    if (currentToken.type != TokenType::IDENTIFIER) {
+        throw SyntaxError("Expected function name after 'def'");
+    }
+    std::string functionName = std::get<std::string>(currentToken.value.asBase());
+
+    advanceToken();
+    if (!expectToken(TokenType::LPAREN)) {
+        throw SyntaxError("Expected '(' after function name");
+    }
+
+    std::vector<std::string> parameters;
+    while (currentToken.type != TokenType::RPAREN) {
+        if (currentToken.type != TokenType::IDENTIFIER) {
+            throw SyntaxError("Expected function parameter name");
+        }
+        parameters.push_back(std::get<std::string>(currentToken.value.asBase()));
+        advanceToken();
+        if (currentToken.type == TokenType::RPAREN) break;
+        if (!expectToken(TokenType::COMMA)) {
+            throw SyntaxError("Expected ',' between function parameters");
+        }
+    }
+    if (!expectToken(TokenType::RPAREN)) {
+        throw SyntaxError("Expected ')' after function parameters' names");
+    }
+    if (!expectToken(TokenType::AS)) {
+        throw SyntaxError("Expected 'as' after function parameters");
+    }
+    auto body = parseBlock();
+    if (!expectToken(TokenType::STOP)) {
+        throw SyntaxError("Expected 'stop' after function body");
+    }
+    return std::make_unique<FunctionDeclarationNode>(functionName, std::move(parameters), std::move(body));
+}
+
+std::unique_ptr<ASTNode> Parser::parseFunctionCall(const std::string &name) {
+    advanceToken();
+    std::vector<std::unique_ptr<ASTNode>> arguments;
+    while (currentToken.type != TokenType::RPAREN) {
+        arguments.push_back(parseExpression_1());
+        if (currentToken.type == TokenType::RPAREN) break;
+        if (!expectToken(TokenType::COMMA)) {
+            throw SyntaxError("Expected ',' between function arguments");
+        }
+    }
+    if (!expectToken(TokenType::RPAREN)) {
+        throw SyntaxError("Expected ')' after function arguments");
+    }
+    return std::make_unique<FunctionCallNode>(name, std::move(arguments));
+}
+
 // general parsing
 
 std::vector<std::unique_ptr<ASTNode>> Parser::parse() {
@@ -244,27 +321,41 @@ std::vector<std::unique_ptr<ASTNode>> Parser::parse() {
 
 std::unique_ptr<ASTNode> Parser::parseStatement() {
     TokenType type = currentToken.type;
-    if (type == TokenType::IF) {
-        return parseIfStatement();
-    } else if (type == TokenType::FOR) {
-        return parseForLoop();
-    } else if (type == TokenType::WHILE) {
-        return parseWhileLoop();
-    } else if (type == TokenType::BREAK) {
-        advanceToken();
-        return std::make_unique<ControlFlowNode>(true);
-    } else if (type == TokenType::CONTINUE) {
-        advanceToken();
-        return std::make_unique<ControlFlowNode>(false);
-    } else if (type == TokenType::IDENTIFIER) {
-        std::string identifierName = std::get<std::string>(currentToken.value.asBase());
-
-        if (lexer.peekNextTokenType() == TokenType::ASSIGN) {
+    switch (type) {
+        case TokenType::IF:
+            return parseIfStatement();
+        case TokenType::DEF:
+            return parseFunctionDeclaration();
+        case TokenType::FOR:
+            return parseForLoop();
+        case TokenType::WHILE:
+            return parseWhileLoop();
+        case TokenType::BREAK:
             advanceToken();
-            return parseAssignment(identifierName);
+            return std::make_unique<ControlFlowNode>(true);
+        case TokenType::CONTINUE:
+            advanceToken();
+            return std::make_unique<ControlFlowNode>(false);
+        case TokenType::RETURN:
+            advanceToken();
+            if (currentToken.type == TokenType::SEMICOLON || currentToken.type == TokenType::EOL) {
+                return std::make_unique<ReturnNode>(nullptr);
+            }
+            return std::make_unique<ReturnNode>(parseExpression_1());
+        case TokenType::IDENTIFIER: {
+            std::string identifierName = std::get<std::string>(currentToken.value.asBase());
+            TokenType nextType = lexer.peekNextTokenType();
+            if (nextType == TokenType::ASSIGN) {
+                advanceToken();
+                return parseAssignment(identifierName);
+            } else if (nextType == TokenType::LPAREN) {
+                advanceToken();
+                return parseFunctionCall(identifierName);
+            }
         }
+        default:
+            return parseExpression_1();
     }
-    return parseExpression_1();
 }
 
 std::unique_ptr<ASTNode> Parser::parseExpression_1() {
@@ -355,8 +446,7 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     } else if (expectToken(TokenType::LPAREN)) {
         node = parseStatement();
         if (!expectToken(TokenType::RPAREN)) {
-            throw SyntaxError(
-                    "Expected closing parentheses ')' but got " + getTypeName(currentToken.type) + " instead");
+            throw SyntaxError("Expected closing parentheses ')' but got " + getTypeName(currentToken.type) + " instead");
         }
     }
     if (!node) {

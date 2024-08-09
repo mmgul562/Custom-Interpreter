@@ -1,5 +1,7 @@
-#include "scope.h"
 #include "../util/errors.h"
+#include "main/ast.h"
+#include "scope.h"
+#include <utility>
 
 
 void Scope::setVariable(const std::string& name, const Value& value) {
@@ -39,6 +41,21 @@ void Scope::assignVariable(const std::string& name, const Value& value) {
     } else {
         throw NameError("Undefined variable: " + name);
     }
+}
+
+void Scope::setFunction(const std::string& name, std::shared_ptr<FunctionDeclarationNode> func) {
+    functions[name] = std::move(func);
+}
+
+std::shared_ptr<FunctionDeclarationNode> Scope::getFunction(const std::string& name) const {
+    auto it = functions.find(name);
+    if (it != functions.end()) {
+        return it->second;
+    }
+    if (parent) {
+        return parent->getFunction(name);
+    }
+    return nullptr;
 }
 
 std::shared_ptr<Scope> Scope::createChildScope() {

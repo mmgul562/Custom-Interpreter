@@ -1,3 +1,4 @@
+#include "../../util/errors.h"
 #include "lexer.h"
 
 
@@ -36,8 +37,11 @@ std::string getTypeName(TokenType type) {
         case TokenType::IN : return "IN";
         case TokenType::WHILE : return "WHILE";
         case TokenType::DO : return "DO";
+        case TokenType::DEF : return "DEF";
+        case TokenType::AS : return "AS";
         case TokenType::BREAK : return "BREAK";
         case TokenType::CONTINUE : return "CONTINUE";
+        case TokenType::RETURN : return "RETURN";
         case TokenType::STOP : return "STOP";
         case TokenType::SEMICOLON : return "SEMICOLON";
         case TokenType::COLON : return "COLON";
@@ -95,13 +99,23 @@ Token Lexer::getNextToken() {
             } else if (input.substr(pos, 2) == "do" && !std::isalnum(input[pos + 2])) {
                 pos += 2;
                 return Token(TokenType::DO);
+            } else if (input.substr(pos, 3) == "def" && !std::isalnum(input[pos + 3])) {
+                pos += 3;
+                return Token(TokenType::DEF);
+            } else if (input.substr(pos, 2) == "as" && !std::isalnum(input[pos + 2])) {
+                pos += 2;
+                return Token(TokenType::AS);
             } else if (input.substr(pos, 5) == "break" && !std::isalnum(input[pos + 5])) {
                 pos += 5;
                 return Token(TokenType::BREAK);
             } else if (input.substr(pos, 8) == "continue" && !std::isalnum(input[pos + 8])) {
                 pos += 8;
                 return Token(TokenType::CONTINUE);
-            } else if (input.substr(pos, 4) == "stop" && !std::isalnum(input[pos + 4])) {
+            } else if (input.substr(pos, 6) == "return" && !std::isalnum(input[pos + 6])) {
+                pos += 6;
+                return Token(TokenType::RETURN);
+            }
+            else if (input.substr(pos, 4) == "stop" && !std::isalnum(input[pos + 4])) {
                 pos += 4;
                 return Token(TokenType::STOP);
             }
