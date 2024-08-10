@@ -206,7 +206,7 @@ Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
         }
         int idx = static_cast<int>(std::get<double>(indexValue.asBase()));
         if (idx >= containerValue.asList().size() || idx < 0) {
-            throw IndexError("Index out of range");
+            throw IndexError("Index (" + std::to_string(idx) + ") out of range");
         }
         return *containerValue.asList()[idx];
     } else if (containerValue.isDict()) {
@@ -486,16 +486,30 @@ Value FunctionCallNode::evaluate(std::shared_ptr<Scope> scope) const {
     if (!func) {
         throw NameError("Unidentified function: " + name);
     }
-
+    bool hasArgs = func->hasArgs;
     size_t paramSize = func->parameters.size(), argSize = arguments.size();
-    if (paramSize != argSize) {
-        throw ValueError("Function " + name + " expects " + std::to_string(paramSize) + " arguments, but got " + std::to_string(argSize));
+    if (hasArgs && paramSize - 1 > argSize) {
+        throw ValueError("Function " + name + " expects at least " + std::to_string(paramSize-1) + " arguments, but got " + std::to_string(argSize));
+    } else if (!hasArgs && paramSize != argSize) {
+        throw ValueError("Function " + name + " expects exactly " + std::to_string(paramSize) + " arguments, but got " + std::to_string(argSize));
     }
 
     auto childScope = scope->createChildScope();
-    for (size_t i = 0; i < paramSize; ++i) {
+    int i;
+    for (i = 0; i < paramSize-1; ++i) {
         Value argumentValue = arguments[i]->evaluate(scope);
         childScope->setVariable(func->parameters[i], argumentValue);
+    }
+    if (!hasArgs) {
+        Value argumentValue = arguments[i]->evaluate(scope);
+        childScope->setVariable(func->parameters[i], argumentValue);
+    } else {
+        std::vector<Value> args;
+        for (int j = i; j < argSize; ++j) {
+            args.push_back(arguments[j]->evaluate(scope));
+        }
+        Value argumentList = Value(args);
+        childScope->setVariable(func->parameters[i], argumentList);
     }
 
     try {

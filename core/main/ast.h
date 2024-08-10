@@ -304,12 +304,13 @@ class FunctionDeclarationNode : public ASTNode {
 public:
     std::string name;
     std::vector<std::string> parameters;
+    bool hasArgs;
     std::unique_ptr<BlockNode> body;
 
-    FunctionDeclarationNode(std::string name, std::vector<std::string> parameters, std::unique_ptr<BlockNode> body)
-        : name(std::move(name)), parameters(std::move(parameters)), body(std::move(body)) {}
+    FunctionDeclarationNode(std::string name, std::vector<std::string> parameters, bool hasArgs, std::unique_ptr<BlockNode> body)
+        : name(std::move(name)), parameters(std::move(parameters)), hasArgs(hasArgs), body(std::move(body)) {}
     FunctionDeclarationNode(const FunctionDeclarationNode& other)
-        : name(other.name), parameters(other.parameters), body(std::make_unique<BlockNode>(*other.body)) {}
+        : name(other.name), parameters(other.parameters), hasArgs(other.hasArgs), body(std::make_unique<BlockNode>(*other.body)) {}
 
     std::unique_ptr<ASTNode> clone() const override {
         return std::make_unique<FunctionDeclarationNode>(*this);

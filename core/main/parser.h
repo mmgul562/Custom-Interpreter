@@ -9,7 +9,7 @@ private:
     Lexer &lexer;
     std::shared_ptr<Scope> currentScope;
 
-    std::unique_ptr<ASTNode> parseAssignment(std::string name);
+    std::unique_ptr<ASTNode> parseAssignment(const std::string& name);
     std::unique_ptr<ASTNode> parseIfStatement();
     std::unique_ptr<ASTNode> parseForLoop();
     std::unique_ptr<ASTNode> parseWhileLoop();

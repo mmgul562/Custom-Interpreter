@@ -63,10 +63,8 @@ bool Parser::isStatementComplete() {
                 nestedLevel--;
                 break;
             }
-            default: {
-            }
+            default: {}
         }
-        if (nestedLevel == 0) break;
         try {
             tempToken = lexer.getNextToken();
         } catch (const LexerError &e) {
@@ -79,9 +77,9 @@ bool Parser::isStatementComplete() {
 
 // specific parsing
 
-std::unique_ptr<ASTNode> Parser::parseAssignment(std::string name) {
+std::unique_ptr<ASTNode> Parser::parseAssignment(const std::string& name) {
     advanceToken();
-    auto valueNode = parseExpression_1();
+    auto valueNode = parseStatement();
     return std::make_unique<AssignmentNode>(name, std::move(valueNode));
 }
 
@@ -254,6 +252,7 @@ std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
         throw SyntaxError("Expected function name after 'def'");
     }
     std::string functionName = std::get<std::string>(currentToken.value.asBase());
+    bool hasArgs = false;
 
     advanceToken();
     if (!expectToken(TokenType::LPAREN)) {
@@ -261,7 +260,10 @@ std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
     }
 
     std::vector<std::string> parameters;
-    while (currentToken.type != TokenType::RPAREN) {
+    while (currentToken.type != TokenType::RPAREN && !hasArgs) {
+        if (expectToken(TokenType::DBL_DOT)) {
+            hasArgs = true;
+        }
         if (currentToken.type != TokenType::IDENTIFIER) {
             throw SyntaxError("Expected function parameter name");
         }
@@ -282,7 +284,7 @@ std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
     if (!expectToken(TokenType::STOP)) {
         throw SyntaxError("Expected 'stop' after function body");
     }
-    return std::make_unique<FunctionDeclarationNode>(functionName, std::move(parameters), std::move(body));
+    return std::make_unique<FunctionDeclarationNode>(functionName, std::move(parameters), hasArgs, std::move(body));
 }
 
 std::unique_ptr<ASTNode> Parser::parseFunctionCall(const std::string &name) {
