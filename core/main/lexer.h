@@ -6,15 +6,17 @@
 
 enum class TokenType {
     // VALUES
-    NUMBER,
+    INT,
+    FLOAT,
     IDENTIFIER,
     STRING,
     TRUE,
     FALSE,
-    // CONVERSION
-    QUOTE,
-    HASH,
-    QMARK,
+    // TYPES
+    INT_T,
+    FLOAT_T,
+    STR_T,
+    BOOL_T,
     // COMPARISON
     EQUAL,
     NOTEQ,
@@ -23,6 +25,7 @@ enum class TokenType {
     GTEQ,
     LTEQ,
     // LOGICAL
+    QMARK,
     NOT,
     AND,
     OR,
@@ -37,6 +40,7 @@ enum class TokenType {
     DBL_SLASH,
     // STATEMENTS
     ASSIGN,
+    ASSIGN_NEW,
     IF,
     ELSE,
     THEN,
@@ -66,33 +70,48 @@ enum class TokenType {
     END
 };
 
+
 std::string getTypeName(TokenType type);
 
+
 class Token {
-public:
+private:
     TokenType type;
     Value value;
 
+public:
     explicit Token(TokenType type) : type(type) {}
+
     Token(TokenType type, Value value) : type(type), value(std::move(value)) {}
+
+    TokenType getType() const { return type; }
+
+    Value getValue() const { return value; }
 };
+
 
 class Lexer {
 private:
     std::string input;
-
-    Token extractNumber();
-    Token extractIdentifier();
-    Token extractString();
+    size_t length;
 
 public:
     size_t pos;
-    size_t length;
 
+private:
+    Token extractNumber();
+
+    Token extractIdentifier();
+
+    Token extractString();
+
+public:
     explicit Lexer(std::string input) : input(std::move(input)), pos(0), length(input.length()) {}
 
     void reset(const std::string &newInput);
+
     Token getNextToken();
+
     TokenType peekNextTokenType();
 };
 

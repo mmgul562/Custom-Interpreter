@@ -1,12 +1,13 @@
 #include "util/errors.h"
 #include "core/main/parser.h"
+#include <iostream>
 
 #define RST  "\x1B[0m"
 #define RED  "\x1B[31m"
 
 
 int main() {
-    std::cout << std::boolalpha;
+    std::cout << std::boolalpha << std::fixed;
     Lexer lexer("");
     Parser parser(lexer);
     auto globalScope = std::make_shared<Scope>();
@@ -43,7 +44,7 @@ int main() {
             Value result;
             for (const auto &statement: statements) {
                 result = statement->evaluate(globalScope);
-                printValue(result);
+                printValue(result, true);
                 std::cout << std::endl;
             }
         } catch (const ControlFlowException &e) {

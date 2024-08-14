@@ -1,24 +1,23 @@
 #ifndef CPP_INTERPRETER_VALUE_H
 #define CPP_INTERPRETER_VALUE_H
 
-#include <iostream>
 #include <variant>
 #include <vector>
 #include <unordered_map>
 #include <memory>
 
+
 class Value;
-class FunctionDeclarationNode;
-using ValueBase = std::variant<double, std::string, bool>;
+using ValueBase = std::variant<long, double, std::string, bool>;
 using ValueList = std::vector<std::shared_ptr<Value>>;
 using ValueDict = std::unordered_map<ValueBase, std::shared_ptr<Value>>;
 
 class Value {
 private:
-    std::variant<ValueBase, ValueList, ValueDict> data;
+    std::variant<std::monostate, ValueBase, ValueList, ValueDict> data = std::monostate();
 
 public:
-    Value() : data(ValueBase{}) {}
+    Value() : data(std::monostate()) {}
     explicit Value(const ValueBase& v) : data(v) {}
     explicit Value(ValueBase&& v) : data(std::move(v)) {}
     explicit Value(const ValueList& v) : data(v) {}
@@ -62,23 +61,22 @@ public:
         return std::visit(std::forward<Visitor>(visitor), data);
     }
 
-    // lists
     void updateListElement(size_t index, const Value& value);
-    size_t length() const;
-    void append(const Value& value);
-    void remove(size_t index);
-    void put(size_t index, const Value& value);
-    // dicts
+
     void setDictElement(const ValueBase& key, const Value& value);
-    size_t dictSize() const;
-    void removeKey(const ValueBase& key);
-    bool keyExists(const ValueBase& key) const;
+
     std::vector<ValueBase> getDictKeys() const;
+
+    std::string toString();
 };
 
-void printValueBase(const ValueBase& v);
-void printValue(const Value& value);
-void printDict(const ValueDict& dict);
-std::string to_string(const ValueBase& value);
+void printValueBase(const ValueBase& v, bool quotes);
+
+void printValue(const Value& value, bool quotes);
+
+void printDict(const ValueDict& dict, bool quotes);
+
+void printList(const ValueList& list, bool quotes);
+
 
 #endif

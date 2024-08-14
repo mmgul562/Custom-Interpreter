@@ -15,15 +15,23 @@ private:
 
 public:
     Scope() : parent(nullptr) {}
+
     explicit Scope(std::shared_ptr<Scope> parent) : parent(std::move(parent)) {}
 
-    void setVariable(const std::string& name, const Value& value);
-    bool hasVariable(const std::string& name) const;
-    bool hasVariableInCurrentOrParentScope(const std::string& name) const;
-    Value getVariable(const std::string& name) const;
-    void assignVariable(const std::string& name, const Value& value);
-    void setFunction(const std::string& name, std::shared_ptr<FunctionDeclarationNode> func);
-    std::shared_ptr<FunctionDeclarationNode> getFunction(const std::string& name) const;
+    void setVariable(const std::string &name, const Value &value);
+
+    bool hasVariable(const std::string &name) const;
+
+    bool hasVariableInCurrentOrParentScope(const std::string &name) const;
+
+    Value getVariable(const std::string &name) const;
+
+    void assignVariable(const std::string &name, const Value &value);
+
+    void setFunction(const std::string &name, std::shared_ptr<FunctionDeclarationNode> func);
+
+    std::shared_ptr<FunctionDeclarationNode> getFunction(const std::string &name) const;
+
     std::shared_ptr<Scope> createChildScope();
 };
 

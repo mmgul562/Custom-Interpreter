@@ -4,13 +4,16 @@
 
 std::string getTypeName(TokenType type) {
     switch (type) {
-        case TokenType::NUMBER : return "NUMBER";
+        case TokenType::FLOAT : return "FLOAT";
+        case TokenType::INT : return "INT";
         case TokenType::IDENTIFIER : return "IDENTIFIER";
         case TokenType::STRING : return "STRING";
         case TokenType::TRUE : return "TRUE";
         case TokenType::FALSE : return "FALSE";
-        case TokenType::QUOTE : return "SINGLE QUOTE";
-        case TokenType::HASH : return "HASH";
+        case TokenType::INT_T : return "INT TYPE";
+        case TokenType::FLOAT_T : return "FLOAT TYPE";
+        case TokenType::STR_T : return "STRING TYPE";
+        case TokenType::BOOL_T : return "BOOL TYPE";
         case TokenType::QMARK : return "QUESTION MARK";
         case TokenType::EQUAL : return "EQUAL";
         case TokenType::NOTEQ : return "NOT EQUAL";
@@ -30,6 +33,7 @@ std::string getTypeName(TokenType type) {
         case TokenType::SLASH : return "SLASH";
         case TokenType::DBL_SLASH : return "DOUBLE SLASH";
         case TokenType::ASSIGN : return "ASSIGN";
+        case TokenType::ASSIGN_NEW : return "ASSIGN NEW";
         case TokenType::IF : return "IF";
         case TokenType::ELSE : return "ELSE";
         case TokenType::THEN : return "THEN";
@@ -60,6 +64,7 @@ std::string getTypeName(TokenType type) {
     }
 }
 
+
 Token Lexer::getNextToken() {
     while (pos < length) {
         if (isspace(input[pos])) {
@@ -72,7 +77,19 @@ Token Lexer::getNextToken() {
             return extractNumber();
         }
         if (isalpha(input[pos])) {
-            if (input.substr(pos, 4) == "true" && !std::isalnum(input[pos + 4])) {
+            if (input.substr(pos, 3) == "int" && !std::isalnum(input[pos + 3])) {
+                pos += 3;
+                return Token(TokenType::INT_T);
+            } else if (input.substr(pos, 5) == "float" && !std::isalnum(input[pos + 5])) {
+                pos += 5;
+                return Token(TokenType::FLOAT_T);
+            } else if (input.substr(pos, 3) == "str" && !std::isalnum(input[pos + 3])) {
+                pos += 3;
+                return Token(TokenType::STR_T);
+            } else if (input.substr(pos, 4) == "bool" && !std::isalnum(input[pos + 4])) {
+                pos += 4;
+                return Token(TokenType::BOOL_T);
+            } else if (input.substr(pos, 4) == "true" && !std::isalnum(input[pos + 4])) {
                 pos += 4;
                 return Token(TokenType::TRUE, Value(true));
             } else if (input.substr(pos, 5) == "false" && !std::isalnum(input[pos + 5])) {
@@ -122,12 +139,6 @@ Token Lexer::getNextToken() {
             return extractIdentifier();
         }
         switch (input[pos]) {
-            case '\'':
-                ++pos;
-                return Token(TokenType::QUOTE);
-            case '#':
-                ++pos;
-                return Token(TokenType::HASH);
             case '?':
                 ++pos;
                 return Token(TokenType::QMARK);
@@ -195,7 +206,10 @@ Token Lexer::getNextToken() {
                 return Token(TokenType::SEMICOLON);
             }
             case ':': {
-                ++pos;
+                if (input[++pos] == '=') {
+                    ++pos;
+                    return Token(TokenType::ASSIGN_NEW);
+                }
                 return Token(TokenType::COLON);
             }
             case ',': {
@@ -238,21 +252,34 @@ Token Lexer::getNextToken() {
     return Token(TokenType::END);
 }
 
+
 TokenType Lexer::peekNextTokenType() {
     size_t tempPos = pos;
     Token token = getNextToken();
     pos = tempPos;
-    return token.type;
+    return token.getType();
 }
+
 
 Token Lexer::extractNumber() {
     size_t start = pos;
+    bool isFloat = false;
+
     while (pos < length && (isdigit(input[pos]) || (input[pos] == '.' && input[pos + 1] != '.'))) {
-        ++pos;
+        if (input[pos++] == '.') {
+            isFloat = true;
+        }
     }
-    double number = std::stod(input.substr(start, pos - start));
-    return Token(TokenType::NUMBER, Value(number));
+    std::string numberStr = input.substr(start, pos - start);
+    if (isFloat) {
+        double number = std::stod(numberStr);
+        return Token(TokenType::FLOAT, Value(number));
+    } else {
+        long number = std::stol(numberStr);
+        return Token(TokenType::INT, Value(number));
+    }
 }
+
 
 Token Lexer::extractIdentifier() {
     size_t start = pos;
@@ -261,6 +288,7 @@ Token Lexer::extractIdentifier() {
     }
     return Token(TokenType::IDENTIFIER, Value(input.substr(start, pos - start)));
 }
+
 
 Token Lexer::extractString() {
     std::string str;
@@ -285,6 +313,7 @@ Token Lexer::extractString() {
     ++pos;
     return Token(TokenType::STRING, Value(str));
 }
+
 
 void Lexer::reset(const std::string &newInput) {
     input = newInput;
