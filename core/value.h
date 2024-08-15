@@ -44,6 +44,7 @@ public:
         return *this;
     }
 
+    bool isNull() const { return std::holds_alternative<std::monostate>(data); }
     bool isBase() const { return std::holds_alternative<ValueBase>(data); }
     bool isList() const { return std::holds_alternative<ValueList>(data); }
     bool isDict() const { return std::holds_alternative<ValueDict>(data); }

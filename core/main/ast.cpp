@@ -122,9 +122,11 @@ bool toBool(const Value &value, bool qmark) {
             return !value.asList().empty();
         } else if (value.isDict()) {
             return !value.asDict().empty();
+        } else if (value.isNull()) {
+            return false;
         }
     }
-    throw TypeError("Cannot convert non-basic types to boolean");
+    throw TypeError("Cannot convert non-basic types to boolean this way. Use '?' instead");
 }
 
 Value TypeCastNode::evaluate(std::shared_ptr<Scope> scope) const {
