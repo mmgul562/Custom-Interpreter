@@ -94,7 +94,7 @@ Value floori(const std::vector<std::unique_ptr<ASTNode>> &arguments, std::shared
 
 Value ceili(const std::vector<std::unique_ptr<ASTNode>> &arguments, std::shared_ptr<Scope> &scope) {
     if (arguments.size() != 1) {
-        throw ValueError("Function type() expects exactly 1 argument, but got " + std::to_string(arguments.size()));
+        throw ValueError("Function ceil() expects exactly 1 argument, but got " + std::to_string(arguments.size()));
     }
     Value val = arguments[0]->evaluate(scope);
     if (!val.isBase() || !std::holds_alternative<double>(val.asBase())) {

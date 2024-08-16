@@ -122,9 +122,11 @@ bool toBool(const Value &value, bool qmark) {
             return !value.asList().empty();
         } else if (value.isDict()) {
             return !value.asDict().empty();
+        } else if (value.isNull()) {
+            return false;
         }
     }
-    throw TypeError("Cannot convert non-basic types to boolean");
+    throw TypeError("Cannot convert non-basic types to boolean this way. Use '?' instead");
 }
 
 Value TypeCastNode::evaluate(std::shared_ptr<Scope> scope) const {
@@ -393,7 +395,7 @@ Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
         auto &dict = containerValue.asDict();
         auto it = dict.find(indexValue.asBase());
         if (it == dict.end()) {
-            throw NameError("Key '" + indexValue.toString() + "' not found in the dictionary");
+            throw NameError("Key '" + toString(indexValue.asBase()) + "' not found in the dictionary");
         }
         return *it->second;
     } else if (std::holds_alternative<std::string>(containerValue.asBase())) {

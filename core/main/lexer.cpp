@@ -172,7 +172,7 @@ Token Lexer::getNextToken() {
                     return Token(TokenType::LTEQ);
                 }
                 return Token(TokenType::LT);
-            case '"':
+            case '"': case '\'':
                 return extractString();
             case '_':
                 ++pos;
@@ -291,9 +291,10 @@ Token Lexer::extractIdentifier() {
 
 
 Token Lexer::extractString() {
+    char quote = input[pos];
     std::string str;
     ++pos;
-    while (pos < length && input[pos] != '"') {
+    while (pos < length && input[pos] != quote) {
         if (input[pos] == '\\' && pos + 1 < length) {
             switch (input[pos + 1]) {
                 case 'n': str += '\n'; break;

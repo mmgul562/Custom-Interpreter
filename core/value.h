@@ -44,6 +44,7 @@ public:
         return *this;
     }
 
+    bool isNull() const { return std::holds_alternative<std::monostate>(data); }
     bool isBase() const { return std::holds_alternative<ValueBase>(data); }
     bool isList() const { return std::holds_alternative<ValueList>(data); }
     bool isDict() const { return std::holds_alternative<ValueDict>(data); }
@@ -66,9 +67,9 @@ public:
     void setDictElement(const ValueBase& key, const Value& value);
 
     std::vector<ValueBase> getDictKeys() const;
-
-    std::string toString();
 };
+
+std::string toString(const ValueBase &v);
 
 void printValueBase(const ValueBase& v, bool quotes);
 
