@@ -3,29 +3,29 @@
 #include <iostream>
 
 
-Value::Value(const std::vector<Value>& vec) {
+Value::Value(const std::vector<Value> &vec) {
     ValueList shared_vec;
-    for (const auto& v : vec) {
+    for (const auto &v: vec) {
         shared_vec.push_back(std::make_shared<Value>(v));
     }
     data = std::move(shared_vec);
 }
 
 
-void Value::updateListElement(size_t index, const Value& value) {
+void Value::updateListElement(size_t index, const Value &value) {
     if (!isList()) {
-        throw TypeError("Cannot update: not a list");
+        throw TypeError("Nie można zaktualizować: wartość nie jest listą");
     }
     if (index >= asList().size()) {
-        throw IndexError("Cannot update: index (" + std::to_string(index) + ") out of range");
+        throw IndexError("Nie można zaktualizować: indeks (" + std::to_string(index) + ") poza zasięgiem");
     }
     *asList()[index] = value;
 }
 
 
-void Value::setDictElement(const ValueBase& key, const Value& value) {
+void Value::setDictElement(const ValueBase &key, const Value &value) {
     if (!isDict()) {
-        throw TypeError("Cannot set/update element: not a dictionary");
+        throw TypeError("Nie można ustawić/zaktualizować: wartość nie jest słownikiem");
     }
     asDict()[key] = std::make_shared<Value>(value);
 }
@@ -33,35 +33,30 @@ void Value::setDictElement(const ValueBase& key, const Value& value) {
 
 std::vector<ValueBase> Value::getDictKeys() const {
     if (!isDict()) {
-        throw TypeError("Cannot get keys: not a dictionary");
+        throw TypeError("Nie można zdobyć kluczy: wartość nie jest słownikiem");
     }
     std::vector<ValueBase> keys;
-    for (const auto& pair : asDict()) {
+    for (const auto &pair: asDict()) {
         keys.push_back(pair.first);
     }
     return keys;
 }
 
-std::string Value::toString() {
-    if (isBase()) {
-        return std::visit([](const auto &v) -> std::string {
-            using T = std::decay_t<decltype(v)>;
-            if constexpr (std::is_same_v<T, double> || std::is_same_v<T, long>) {
-                return std::to_string(v);
-            } else if constexpr (std::is_same_v<T, std::string>) {
-                return v;
-            } else if constexpr (std::is_same_v<T, bool>) {
-                return v ? "true" : "false";
-            }
-        }, asBase());
+std::string toString(const ValueBase &v) {
+    if (std::holds_alternative<double>(v)) {
+        return std::to_string(std::get<double>(v));
+    } else if (std::holds_alternative<long>(v)) {
+        return std::to_string(std::get<long>(v));
+    } else if (std::holds_alternative<std::string>(v)) {
+        return std::get<std::string>(v);
     } else {
-        return "";
+        return std::get<bool>(v) ? "prawda" : "falsz";
     }
 }
 
 // printing
 
-void printList(const ValueList& list, bool quotes) {
+void printList(const ValueList &list, bool quotes) {
     std::cout << "[";
     for (size_t i = 0; i < list.size(); ++i) {
         printValue(*list[i], quotes);
@@ -71,10 +66,10 @@ void printList(const ValueList& list, bool quotes) {
 }
 
 
-void printDict(const ValueDict& dict, bool quotes) {
+void printDict(const ValueDict &dict, bool quotes) {
     std::cout << "{";
     bool first = true;
-    for (const auto& [key, value] : dict) {
+    for (const auto &[key, value]: dict) {
         if (!first) std::cout << ", ";
         printValueBase(key, quotes);
         std::cout << ": ";
@@ -85,28 +80,23 @@ void printDict(const ValueDict& dict, bool quotes) {
 }
 
 
-void printValueBase(const ValueBase& v, bool quotes) {
-    std::visit([&quotes](const auto& x) {
-        if (quotes && std::is_same_v<std::decay_t<decltype(x)>, std::string>) {
-            std::cout << '"' << x << '"';
-        } else {
-            std::cout << x;
-        }
-    }, v);
+void printValueBase(const ValueBase &v, bool quotes) {
+    if (std::holds_alternative<std::string>(v) && quotes) {
+        std::cout << '"' << std::get<std::string>(v) << '"';
+    } else {
+        std::cout << toString(v);
+    }
 }
 
 
-void printValue(const Value& value, bool quotes) {
-    value.visit([&quotes](const auto& v) {
-        using T = std::decay_t<decltype(v)>;
-        if constexpr (std::is_same_v<T, std::monostate>) {
-            std::cout << "null";
-        } else if constexpr (std::is_same_v<T, ValueList>) {
-            printList(v, quotes);
-        } else if constexpr (std::is_same_v<T, ValueDict>) {
-            printDict(v, quotes);
-        } else if constexpr (std::is_same_v<T, ValueBase>) {
-            printValueBase(v, quotes);
-        }
-    });
+void printValue(const Value &value, bool quotes) {
+    if (value.isList()) {
+        printList(value.asList(), quotes);
+    } else if (value.isDict()) {
+        printDict(value.asDict(), quotes);
+    } else if (value.isNull()) {
+        std::cout << "nic";
+    } else {
+        printValueBase(value.asBase(), quotes);
+    }
 }

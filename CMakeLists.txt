@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.23)
-project(cpp_interpreter_en)
+project(cpp_interpreter_pl)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(cpp_interpreter_en main.cpp core/main/lexer.cpp core/main/lexer.h core/main/parser.cpp core/main/parser.h core/main/ast.cpp core/main/ast.h core/scope.h core/value.h core/scope.cpp core/value.cpp util/errors.h
+add_executable(cpp_interpreter_pl main.cpp core/main/lexer.cpp core/main/lexer.h core/main/parser.cpp core/main/parser.h core/main/ast.cpp core/main/ast.h core/scope.h core/value.h core/scope.cpp core/value.cpp util/errors.h
         util/functions.cpp
         util/functions.h
         util/utf8string.cpp

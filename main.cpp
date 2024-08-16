@@ -7,14 +7,14 @@
 
 
 int main() {
-    std::cout << std::boolalpha << std::fixed;
+    std::cout << std::fixed;
     Lexer lexer("");
     Parser parser(lexer);
     auto globalScope = std::make_shared<Scope>();
     std::string input;
     bool continuation;
 
-    std::cout << "Type 'exit' to quit" << std::endl;
+    std::cout << "Wpisz 'wyjdz' aby wyjść" << std::endl;
     while (true) {
         std::cout << "> ";
         std::string line;
@@ -23,7 +23,7 @@ int main() {
             do {
                 std::getline(std::cin, line);
                 line.erase(line.find_last_not_of(" \t") + 1);
-                if (line == "exit" && input.empty()) {
+                if (line == "wyjdz" && input.empty()) {
                     return 0;
                 }
                 if (!line.empty() && line.back() == '\\') {
@@ -48,13 +48,13 @@ int main() {
                 std::cout << std::endl;
             }
         } catch (const ControlFlowException &e) {
-            std::cout << RED << "Control flow error: Use of " + std::string(e.what()) + " outside of a loop" << RST << std::endl;
+            std::cout << RED << "Błąd przepływu sterowania: Użycie " + std::string(e.what()) + " poza pętlą" << RST << std::endl;
         } catch (const ReturnException &e) {
-            std::cout << RED << "Control flow error: Use of RETURN outside of a function" << RST << std::endl;
+            std::cout << RED << "Błąd przepływu sterowania: Użycie ZWROC poza funkcją" << RST << std::endl;
         } catch (const BaseError &e) {
             std::cout << RED << e.what() << RST << std::endl;
         } catch (const std::exception &e) {
-            std::cout << RED << "Unexpected error: " << e.what() << RST << std::endl;
+            std::cout << RED << "Niespodziewany błąd: " << e.what() << RST << std::endl;
         }
     }
 }

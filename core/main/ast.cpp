@@ -57,7 +57,7 @@ std::string toString(const Value &value) {
             return std::get<std::string>(base);
         }
     }
-    throw TypeError("Cannot convert non-basic types to string");
+    throw TypeError("Nie można przekonwertować typów złożonych na łańcuch");
 }
 
 double toFloat(const Value &value) {
@@ -74,13 +74,13 @@ double toFloat(const Value &value) {
             try {
                 return std::stod(s);
             } catch (const std::invalid_argument &) {
-                throw ConversionError("Cannot convert string to float: " + s);
+                throw ConversionError("Nie można przekonwertować łańcucha na liczbę zmiennoprzecinkową" + s);
             } catch (const std::out_of_range &) {
-                throw ConversionError("Number out of range: " + s);
+                throw ConversionError("Liczba poza zasięgiem: " + s);
             }
         }
     }
-    throw TypeError("Cannot convert non-basic types to float");
+    throw TypeError("Nie można przekonwertować typów złożonych na liczbę zmiennoprzecinkową");
 }
 
 long toInt(const Value &value) {
@@ -96,13 +96,14 @@ long toInt(const Value &value) {
             try {
                 return std::stol(std::get<std::string>(base));
             } catch (const std::invalid_argument &) {
-                throw ConversionError("Cannot convert string to int: " + std::get<std::string>(base));
+                throw ConversionError(
+                        "Nie można przekonwerteować łańcucha na liczbę całkowitą: " + std::get<std::string>(base));
             } catch (const std::out_of_range &) {
-                throw ConversionError("Number out of range: " + std::get<std::string>(base));
+                throw ConversionError("Liczba poza zasięgiem: " + std::get<std::string>(base));
             }
         }
     }
-    throw TypeError("Cannot convert non-basic types to int");
+    throw TypeError("Nie można przekonwertować typów złożonych na liczbę całkowitą");
 }
 
 bool toBool(const Value &value, bool qmark) {
@@ -126,7 +127,8 @@ bool toBool(const Value &value, bool qmark) {
             return false;
         }
     }
-    throw TypeError("Cannot convert non-basic types to boolean this way. Use '?' instead");
+    throw TypeError(
+            "Nie można przekonwertować typów złożonych na wartość logiczną w ten sposób. Zamiast tego użyj '?'");
 }
 
 Value TypeCastNode::evaluate(std::shared_ptr<Scope> scope) const {
@@ -141,7 +143,7 @@ Value TypeCastNode::evaluate(std::shared_ptr<Scope> scope) const {
         case TokenType::STR_T:
             return Value(toString(value));
         default:
-            throw ConversionError("Invalid conversion type: " + getTypeName(type));
+            throw ConversionError("Nieprawidłowy typ konwersji: " + getTypeName(type));
     }
 }
 
@@ -157,7 +159,7 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
             if (operandValue.isBase() && std::holds_alternative<bool>(operandValue.asBase())) {
                 return Value(!std::get<bool>(operandValue.asBase()));
             }
-            throw TypeError("NOT operator can only be used with boolean values");
+            throw TypeError("Operator NIE może być używany tylko z wartościami logicznymi");
         case TokenType::MINUS:
             if (operandValue.isBase()) {
                 ValueBase base = operandValue.asBase();
@@ -167,7 +169,7 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                     return Value(-std::get<long>(base));
                 }
             }
-            throw TypeError("MINUS operator can only be used with numbers");
+            throw TypeError("Operator MINUS może być używany tylko z liczbami");
         case TokenType::UNDERSCORE:
             if (operandValue.isBase()) {
                 if (std::holds_alternative<double>(operandValue.asBase())) {
@@ -176,11 +178,11 @@ Value UnaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
                     return Value(std::abs(std::get<long>(operandValue.asBase())));
                 }
             }
-            throw TypeError("UNDERSCORE (absolute) operator can only be used with numbers");
+            throw TypeError("Operator PODKREŚLNIK (wartość bezwzględna) może być używany tylko z liczbami");
         case TokenType::QMARK:
             return Value(toBool(operandValue, true));
         default:
-            throw InterpreterError("Unexpected unary operator: " + getTypeName(op));
+            throw InterpreterError("Nieoczekiwany operator jednoargumentowy: " + getTypeName(op));
     }
 }
 
@@ -214,7 +216,8 @@ Value BinaryOpVisitor::operator()(double lhs, double rhs) const {
         case TokenType::DBL_SLASH:
             return Value(std::floor(lhs / rhs));
         default:
-            throw InterpreterError("Unexpected binary operator for float values: " + getTypeName(op));
+            throw InterpreterError(
+                    "Nieoczekiwany operator dwuargumentowy dla wartości zmiennoprzecinkowych: " + getTypeName(op));
     }
 }
 
@@ -242,10 +245,12 @@ Value BinaryOpVisitor::operator()(long lhs, long rhs) const {
             return Value(lhs * rhs);
         case TokenType::DBL_ASTER:
             return Value(static_cast<long>(std::pow(lhs, rhs)));
-        case TokenType::SLASH: case TokenType::DBL_SLASH:
+        case TokenType::SLASH:
+        case TokenType::DBL_SLASH:
             return Value(lhs / rhs);
         default:
-            throw InterpreterError("Unexpected binary operator for int values: " + getTypeName(op));
+            throw InterpreterError(
+                    "Nieoczekiwany operator dwuargumentowy dla wartości całkowitych: " + getTypeName(op));
     }
 }
 
@@ -266,7 +271,7 @@ Value BinaryOpVisitor::operator()(const std::string &lhs, const std::string &rhs
         case TokenType::LTEQ:
             return Value(lhs.length() <= rhs.length());
         default:
-            throw InterpreterError("Unexpected binary operator for string values: " + getTypeName(op));
+            throw InterpreterError("Nieoczekiwany operator dwuargumentowy dla ciągów znaków: " + getTypeName(op));
     }
 }
 
@@ -281,13 +286,13 @@ Value BinaryOpVisitor::operator()(bool lhs, bool rhs) const {
         case TokenType::OR:
             return Value(lhs || rhs);
         default:
-            throw InterpreterError("Unexpected binary operator for boolean values: " + getTypeName(op));
+            throw InterpreterError("Nieoczekiwany operator dwuargumentowy dla wartości logicznych: " + getTypeName(op));
     }
 }
 
 template<typename T, typename U>
 Value BinaryOpVisitor::operator()(const T &, const U &) const {
-    throw InterpreterError("Unexpected binary operator: " + getTypeName(op));
+    throw InterpreterError("Nieoczekiwany operator dwuargumentowy: " + getTypeName(op));
 }
 
 std::unique_ptr<ASTNode> BinaryOpNode::clone() const {
@@ -304,7 +309,7 @@ Value BinaryOpNode::evaluate(std::shared_ptr<Scope> scope) const {
 
         return std::visit(BinaryOpVisitor{op}, leftBase, rightBase);
     }
-    throw InterpreterError("Unexpected binary operator: " + getTypeName(op));
+    throw InterpreterError("Nieoczekiwany operator dwuargumentowy: " + getTypeName(op));
 }
 
 
@@ -362,7 +367,7 @@ Value DictNode::evaluate(std::shared_ptr<Scope> scope) const {
     for (const auto &[keyNode, valueNode]: elements) {
         Value key = keyNode->evaluate(scope);
         if (!key.isBase()) {
-            throw TypeError("Dictionary key must be a basic type");
+            throw TypeError("Klucz słownika musi być typem podstawowym");
         }
         Value value = valueNode->evaluate(scope);
         dict[key.asBase()] = std::make_shared<Value>(value);
@@ -381,35 +386,35 @@ Value IndexAccessNode::evaluate(std::shared_ptr<Scope> scope) const {
 
     if (containerValue.isList()) {
         if (!indexValue.isBase() || !std::holds_alternative<long>(indexValue.asBase())) {
-            throw TypeError("List index must be an integer");
+            throw TypeError("Indeks listy musi być liczbą całkowitą");
         }
         long idx = std::get<long>(indexValue.asBase());
         if (idx >= containerValue.asList().size() || idx < 0) {
-            throw IndexError("Index (" + std::to_string(idx) + ") out of range");
+            throw IndexError("Indeks (" + std::to_string(idx) + ") poza zakresem");
         }
         return *containerValue.asList()[idx];
     } else if (containerValue.isDict()) {
         if (!indexValue.isBase()) {
-            throw TypeError("Dictionary key must be a basic type");
+            throw TypeError("Klucz słownika musi być typem podstawowym");
         }
         auto &dict = containerValue.asDict();
         auto it = dict.find(indexValue.asBase());
         if (it == dict.end()) {
-            throw NameError("Key '" + indexValue.toString() + "' not found in the dictionary");
+            throw NameError("Klucz '" + toString(indexValue.asBase()) + "' nie został znaleziony w słowniku");
         }
         return *it->second;
     } else if (std::holds_alternative<std::string>(containerValue.asBase())) {
         auto &s = std::get<std::string>(containerValue.asBase());
         if (!indexValue.isBase() || !std::holds_alternative<long>(indexValue.asBase())) {
-            throw TypeError("String index must be an integer");
+            throw TypeError("Indeks łańcucha musi być liczbą całkowitą");
         }
         long idx = std::get<long>(indexValue.asBase());
         if (idx >= getStrLen(s) || idx < 0) {
-            throw IndexError("Index (" + std::to_string(idx) + ") out of range");
+            throw IndexError("Indeks (" + std::to_string(idx) + ") poza zakresem");
         }
         return Value(getStrChar(s, idx));
     } else {
-        throw TypeError("Indexing can only be performed on lists, dictionaries and strings");
+        throw TypeError("Indeksowanie może być wykonywane tylko na listach, słownikach i łańcuchach");
     }
 }
 
@@ -421,13 +426,13 @@ void updateNestedContainer(const std::unique_ptr<ASTNode> &node, const Value &up
 
         if (parentContainerValue.isList()) {
             if (!indexValue.isBase() || !std::holds_alternative<long>(indexValue.asBase())) {
-                throw TypeError("List index must be an integer");
+                throw TypeError("Indeks listy musi być liczbą całkowitą");
             }
             auto idx = static_cast<size_t>(std::get<long>(indexValue.asBase()));
             parentContainerValue.updateListElement(idx, updated);
         } else if (parentContainerValue.isDict()) {
             if (!indexValue.isBase()) {
-                throw TypeError("Dictionary key must be a basic type");
+                throw TypeError("Klucz słownika musi być typem podstawowym");
             }
             parentContainerValue.setDictElement(indexValue.asBase(), updated);
         }
@@ -445,7 +450,7 @@ std::unique_ptr<ASTNode> IndexAssignmentNode::clone() const {
 Value IndexAssignmentNode::evaluate(std::shared_ptr<Scope> scope) const {
     auto *indexAccessNode = dynamic_cast<IndexAccessNode *>(access.get());
     if (!indexAccessNode) {
-        throw InterpreterError("Invalid index assignment");
+        throw InterpreterError("Nieprawidłowe przypisanie indeksu");
     }
 
     Value containerValue = indexAccessNode->getContainer()->evaluate(scope);
@@ -454,17 +459,17 @@ Value IndexAssignmentNode::evaluate(std::shared_ptr<Scope> scope) const {
 
     if (containerValue.isList()) {
         if (!indexValue.isBase() || !std::holds_alternative<long>(indexValue.asBase())) {
-            throw TypeError("List index must be an integer");
+            throw TypeError("Indeks listy musi być liczbą całkowitą");
         }
         long idx = std::get<long>(indexValue.asBase());
         containerValue.updateListElement(idx, newValue);
     } else if (containerValue.isDict()) {
         if (!indexValue.isBase()) {
-            throw TypeError("Dictionary key must be a basic type");
+            throw TypeError("Klucz słownika musi być typem podstawowym");
         }
         containerValue.setDictElement(indexValue.asBase(), newValue);
     } else {
-        throw TypeError("Index assignment can only be performed on lists and dictionaries");
+        throw TypeError("Przypisanie indeksu może być wykonywane tylko na listach i słownikach");
     }
     updateNestedContainer(indexAccessNode->getContainer(), containerValue, scope);
     return newValue;
@@ -483,39 +488,39 @@ Value MethodCallNode::evaluate(std::shared_ptr<Scope> scope) const {
     Value containerValue = container->evaluate(scope);
 
     if (containerValue.isList()) {
-        if (methodName == "len") {
+        if (methodName == "dlugosc") {
             return listlen(containerValue, arguments);
-        } else if (methodName == "append") {
+        } else if (methodName == "dodaj") {
             listappend(containerValue, arguments, scope);
-        } else if (methodName == "remove") {
+        } else if (methodName == "usun") {
             listremove(containerValue, arguments, scope);
-        } else if (methodName == "put") {
+        } else if (methodName == "wstaw") {
             listput(containerValue, arguments, scope);
         } else {
-            throw NameError("Unknown list method: " + methodName);
+            throw NameError("Nieznana metoda listy: " + methodName);
         }
     } else if (containerValue.isDict()) {
-        if (methodName == "size") {
+        if (methodName == "wielkosc") {
             return dictsize(containerValue, arguments);
-        } else if (methodName == "remove") {
+        } else if (methodName == "usun") {
             dictremove(containerValue, arguments, scope);
-        } else if (methodName == "exists") {
+        } else if (methodName == "istnieje") {
             return dictexists(containerValue, arguments, scope);
         } else {
-            throw NameError("Unknown dictionary method: " + methodName);
+            throw NameError("Nieznana metoda słownika: " + methodName);
         }
     } else if (containerValue.isBase() && std::holds_alternative<std::string>(containerValue.asBase())) {
-        if (methodName == "len") {
+        if (methodName == "dlugosc") {
             return slen(containerValue, arguments);
-        } else if (methodName == "ltrim") {
+        } else if (methodName == "ltrym") {
             sltrim(containerValue, arguments, scope);
-        } else if (methodName == "rtrim") {
+        } else if (methodName == "ptrym") {
             srtrim(containerValue, arguments, scope);
         } else {
-            throw NameError("Unknown string method: " + methodName);
+            throw NameError("Nieznana metoda łańcucha: " + methodName);
         }
     } else {
-        throw TypeError("Methods can only be called on lists, dictionaries and strings");
+        throw TypeError("Metody mogą być wywoływane tylko na listach, słownikach i łańcuchach");
     }
     updateNestedContainer(container, containerValue, scope);
     return containerValue;
@@ -554,7 +559,7 @@ Value IfElseNode::evaluate(std::shared_ptr<Scope> scope) const {
             return elseBlock->evaluate(scope);
         }
     } else {
-        throw TypeError("Expected boolean expression after 'if'");
+        throw TypeError("Oczekiwano wyrażenia logicznego po 'if'");
     }
     return Value();
 }
@@ -582,7 +587,7 @@ Value ForLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
 
         if (!startValue.isBase() || !std::holds_alternative<long>(startValue.asBase()) ||
             !endValue.isBase() || !std::holds_alternative<long>(endValue.asBase())) {
-            throw TypeError("Loop range must be integers");
+            throw TypeError("Zakres pętli musi składać się z liczb całkowitych");
         }
 
         long start = std::get<long>(startValue.asBase());
@@ -592,18 +597,18 @@ Value ForLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
         if (stepExpr) {
             Value stepValue = stepExpr->evaluate(scope);
             if (!stepValue.isBase() || !std::holds_alternative<long>(stepValue.asBase())) {
-                throw TypeError("Loop step must be an integer");
+                throw TypeError("Krok pętli musi być liczbą całkowitą");
             }
             step = std::get<long>(stepValue.asBase());
             if (step == 0) {
-                throw ValueError("Loop step cannot be zero");
+                throw ValueError("Krok pętli nie może być zerem");
             }
         } else {
             step = (start <= end) ? 1 : -1;
         }
 
         if ((step > 0 && start > end) || (step < 0 && start < end)) {
-            throw ValueError("Invalid loop range and step combination");
+            throw ValueError("Nieprawidłowa kombinacja zakresu i kroku pętli");
         }
         for (long i = start; (step > 0) ? (i <= end) : (i >= end); i += step) {
             loopScope->setVariable(variableName, Value(i));
@@ -617,7 +622,7 @@ Value ForLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
     } else {
         Value iterableValue = startExpr->evaluate(scope);
         if (!iterableValue.isDict()) {
-            throw TypeError("Cannot iterate: not a dictionary");
+            throw TypeError("Nie można iterować: wartość nie jest słownikiem");
         }
         std::vector<ValueBase> keys = iterableValue.getDictKeys();
         for (const auto &key: keys) {
@@ -655,7 +660,7 @@ Value WhileLoopNode::evaluate(std::shared_ptr<Scope> scope) const {
             maxIterations--;
         }
     } else {
-        throw TypeError("Expected boolean expression after 'while'");
+        throw TypeError("Oczekiwano wyrażenia logicznego po 'podczas gdy'");
     }
     return lastValue;
 }
@@ -692,8 +697,8 @@ std::unique_ptr<ASTNode> FunctionDeclarationNode::clone() const {
 }
 
 Value FunctionDeclarationNode::evaluate(std::shared_ptr<Scope> scope) const {
-    if (name == "print" || name == "type" || name == "roundf" || name == "round" || name == "floor" || name == "ceil") {
-        throw NameError("Function " + name + "() is a built-in function and cannot be redefined");
+    if (name == "wyswietl" || name == "typ" || name == "zaokraglijzp" || name == "zaokraglij" || name == "podloga" || name == "sufit") {
+        throw NameError("Funkcja " + name + "() jest funkcją wbudowaną i nie może być przedefiniowana");
     }
     scope->setFunction(name, std::make_shared<FunctionDeclarationNode>(*this));
     return Value();
@@ -711,32 +716,30 @@ std::unique_ptr<ASTNode> FunctionCallNode::clone() const {
 Value FunctionCallNode::evaluate(std::shared_ptr<Scope> scope) const {
     std::shared_ptr<FunctionDeclarationNode> func = scope->getFunction(name);
     size_t argSize = arguments.size();
-    if (name == "print") {
+    if (name == "wyswietl") {
         return print(arguments, scope);
-    } else if (name == "type") {
+    } else if (name == "typ") {
         return type(arguments, scope);
-    } else if (name == "roundf") {
+    } else if (name == "zaokraglijzp") {
         return roundf(arguments, scope);
-    } else if (name == "round") {
+    } else if (name == "zaokraglij") {
         return roundi(arguments, scope);
-    } else if (name == "floor") {
+    } else if (name == "podloga") {
         return floori(arguments, scope);
-    } else if (name == "ceil") {
+    } else if (name == "sufit") {
         return ceili(arguments, scope);
     } else if (!func) {
-        throw NameError("Unidentified function: " + name);
+        throw NameError("Niezidentyfikowana funkcja: " + name);
     }
 
     bool hasArgs = func->getHasArgs();
     size_t paramSize = func->getParameters().size();
     if (hasArgs && paramSize - 1 > argSize) {
-        throw ValueError(
-                "Function " + name + "() expects at least " + std::to_string(paramSize - 1) + " arguments, but got " +
-                std::to_string(argSize));
+        throw ValueError("Funkcja " + name + "() oczekuje co najmniej " + std::to_string(paramSize - 1) +
+                         " argumenty/ów, ale otrzymała " + std::to_string(argSize));
     } else if (!hasArgs && paramSize != argSize) {
-        throw ValueError(
-                "Function " + name + "() expects exactly " + std::to_string(paramSize) + " arguments, but got " +
-                std::to_string(argSize));
+        throw ValueError("Funkcja " + name + "() oczekuje dokładnie " + std::to_string(paramSize) +
+                         " argumenty/ów, ale otrzymała " + std::to_string(argSize));
     }
 
     auto childScope = scope->createChildScope();

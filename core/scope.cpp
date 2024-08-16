@@ -33,7 +33,7 @@ Value Scope::getVariable(const std::string& name) const {
     if (parent) {
         return parent->getVariable(name);
     }
-    throw NameError("Unidentified variable: " + name);
+    throw NameError("Niezidentyfikowana zmienna: " + name);
 }
 
 
@@ -43,7 +43,7 @@ void Scope::assignVariable(const std::string& name, const Value& value) {
     } else if (parent) {
         parent->assignVariable(name, value);
     } else {
-        throw NameError("Unidentified variable: " + name);
+        throw NameError("Niezidentyfikowana zmienna: " + name);
     }
 }
 

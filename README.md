@@ -1,421 +1,506 @@
-# C++ custom pseudo-code-like language interpreter
+# C++ pseudo-code-like language interpreter **po polsku**
 
-## Requirements
-1. A C++20 compatible compiler
-2. (optional) CMake 3.23 or higher
+## Wymagania
 
-## Getting Started
-1. Clone the Repository
-2. Build the Project. If you're using CMake, then from the root directory of the project:
-   - `mkdir build`
-   - `cd build`
-   - `cmake ..`
-   - `make`
-3. Run the program:
-`./cpp_interpreter_en`
+1. Kompilator kompatybilny z C++20
+2. (zalecane) CMake 3.23 lub nowszy
 
-## Language Features
-### Basic Information
+## Rozpoczęcie
 
-- Everything is an expression. Statements (like [function definition](#functions)) will just return `null`
-- Any valid statements or expressions will be evaluated and their result printed
-- Language is space-insensitive, **except** newlines, which are normally treated as the end of the statement
-- Statements are separated by semicolons `;` or newlines. Using `;` is crucial when writing multiple statements in a single line
-- Every input can be continued in the next lines, if the input line ends with backslash `\`
+1. Sklonuj repozytorium
+2. Skompiluj projekt. Jeżeli używasz CMake, to:
+    - `cd <katalog_glowny_projektu>`
+    - `mkdir build`
+    - `cd build`
+    - `cmake ..`
+    - `make`
+3. Uruchom program:
+   `./cpp_interpreter_pl`
 
-<details><summary>Examples</summary>
+## Cechy Języka
 
-1. Using semicolons
+### Podstawowe informacje
+- Wszystko jest wyrażeniem. Instrukcje (takie jak [definiowanie funkcji](#funkcje)) zwrócą po prostu `nic`
+- Każde poprawne instrukcje lub wyrażenia zostaną ewaluowane, a ich wynik wyświetlony
+- Język jest niewrażliwy na białe znaki, **z wyjątkiem** nowych linii, które są zazwyczaj traktowane jako koniec instrukcji
+- Instrukcje są oddzielane średnikami `;` lub nowymi liniami. Użycie `;` jest kluczowe przy pisaniu wielu instrukcji w jednej linii
+- Każde wejście (input) może być kontynuowane w następnych liniach, jeśli linia wejściowa kończy się ukośnikiem odwrotnym `\`
+
+<details><summary>Przykłady</summary>
+
+1. Używanie średników
+
 ```
 > "Hello, world!";      <- ok
 "Hello, world!"
 ```
+
 ```
 > "Hello, world!"; 2 + 2 * 2      <- ok
 "Hello, world!"
 6
 ```
+
 ```
-> "Hello, world!" 2 + 2 * 2      <- not ok
-Error
+> "Hello, world!" 2 + 2 * 2      <- nie ok
+Błąd
 ```
 
-2. Line continuation
+2. Kontynuacja
+
 ```
 > 2 + \
-2 * 2        <- continuation
-6        <- result
+2 * 2        <- kontynuacja
+6        <- wynik
 ```
+
 </details>
 
 ### Variables
+
 - There is **no** variable declaration
 - Variable assignment uses `:=` operator
 - Variable reassignment uses `=` operator
 - Multiple variables can be assigned within a single statement
-<details><summary>Examples</summary>
 
-1. Using `:=` and `=` operators
+<details><summary>Przykłady</summary>
+
+1. Używanie operatorów `:=` i `=`
+
 ```
-> var := 6      <- ok
+> x := 6      <- ok
 6
-> var = 12      <- ok
+> x = 12      <- ok
 12
 ```
+
 ```
-> var = 6      <- not ok
-Error
+> x = 6      <- nie ok
+Błąd
 ```
-2. Multiple variable assignment/reassignment
+
+2. Przypisanie wielu zmiennych
+
 ```
 > x := y := z := 20
 20
-> z = y = x = "new"
-"new"
+> z = y = x = "nowa"
+"nowa"
 ```
+
 </details>
 
-### Data Types
+### Typy danych
 
-- Integer (`int`)
-- Float (`float`)
-- String (`str`)
-- Boolean (`bool`)
-- List
-- Dictionary
-- Null
-<details><summary>Details</summary>
+- Liczba całkowita (`calk`) - int
+- Liczba zmiennoprzecinkowa (`zmienno`) - float
+- Łańcuch znaków (`lancuch`) - string
+- Wartość logiczna (`logiczna`) - boolean
+- Lista - list
+- Słownik - dictionary
+- Nic - null
 
-1. Floats are created with dot `.`. Without it, they will be evaluated as integers
+<details><summary>Szczegóły</summary>
+
+1. Liczby zmiennprzecinkowe są tworzone przy pomocy kropki `.`. Bez niej zostaną potraktowane jako liczby całkowite
+
 ```
-> aFloat := 3.
+> zmienpoz := 3.
 3.000000
-> notAFloat := 3
+> nieZmienpoz := 3
 3
 ```
-2. Integers and floats **cannot** perform arithmetic operations together.
-   One of them must be explicitly cast to the type of the other first ([Type Casting](#type-casting))
+
+2. `calk` i `zmienno` **nie mogą** wykonywać opreacji arytmetycznych razem.
+   Najpierw jedno z nich musi mieć narzucony typ na ten drugiego ([Narzucanie typów](#narzucanie-typów))
+
 ```
-> myInt := 8
+> calkow := 8
 8
-> myFloat := 12.5
+> zmienpoz := 12.5
 12.500000
-> myInt + myFloat
-Error
+> calkow + zmienpoz
+Błąd
 ```
-3. Strings can use double quotes `"` or single quotes `'`. They *should* support all valid utf-8 characters
-4. Booleans are lowercase (`true` and `false`)
-5. Lists use square brackets `[]` and can hold any data type
+
+3. Łańcuchy mogą używać podwójnego cydzysłowu `"` lub pojedynczego `'`. *Powinny* działać ze wszystkimi poprawnymi
+   znakami utf-8.
+4. Wartości logiczne to `prawda` i `falsz`
+5. Listy używają nawiasów kwadratowych `[]` i mogą trzymać każdy typ danych
+
 ```
-> myList := [1, 3.14, true, ["hello"], false]
-[1, 3.140000, true, ["hello"], false]
+> lista := [1, 3.14, prawda, ["hello"], falsz]
+[1, 3.140000, prawda, ["hello"], falsz]
 ```
-6. Dictionaries use curly brackets `{}`, can hold only basic data type (`int`, `float`, `bool`, `str`) as a key and any data type as a value
+
+6. Słowniki używają nawiasów klamrowych `{}`, mogą trzymać tylko podstawowy typ
+   danych (`calk`, `zmienno`, `logiczna`, `lancuch`)
+   jako klucze i każdy typ danych jako wartości.
+
 ```
-> myDict := {"key": "val", true: ["true", 2, 3], 3.: 145}      <- ok
-{"key": "val", true: ["true", 2, 3], 3.000000: 145}
+> slow := {"klucz": "wart", prawda: ["true", 2, 3], 3.: 145}      <- ok
+{"klucz": "wart", prawda: ["true", 2, 3], 3.000000: 145}
 ```
+
 ```
-> myDict := {"key": "val", ["invalid"]: "invalid"}      <- not ok
-Error
+> slow := {"klucz": "wart", ["niepoprawne"]: "niepoprawne"}      <- nie ok
+Błąd
 ```
-7. Lists, dictionaries and strings can use [methods](#methods) and indexing `[]`
-8. Null value can only be created through an expression returning nothing (like function definition or call)
+
+7. Listy, słowniki i łańcuchy mogą używać [metod](#metody) i indeksowania `[]`
+8. Puste wartości (`nic`) mogą zostać stworzone tylko przez wyrażenia zwracające nic (np. definiowanie funkcji)
+
 ```
-> myNull := print("I return nothing")
-I return nothing                         <- print
-null                                     <- result
+> pusta := wyswietl("Nic nie zwracam")
+Nic nie zwracam                           <- napis
+nic                                     <- wynik
 ```
+
 </details>
 
-### Operators
+### Operatory
 
-- Arithmetic: `+`, `-`, `*`, `/`, `//` (integer division), `**` (exponentiation), `%` (modulo)
-- Comparison: `==`, `!=`, `>`, `<`, `>=`, `<=`
-- Logical: `&` (and), `|` (or), `!` (not)
-- Unary: `-` (negation), `_` (absolute value), `?` ([boolean conversion](#type-casting) - works for every type)
-<details><summary>Details</summary>
+- Arytmetyczne: `+`, `-`, `*`, `/`, `//` (dzielenie całkowite), `**` (potęgowanie), `%` (modulo)
+- Porównywania: `==`, `!=`, `>`, `<`, `>=`, `<=`
+- Logiczne: `&` (i), `|` (lub), `!` (nie)
+- Unarne: `-` (negacja), `_` (wartość bezwzględna), `?` ([konwersja logiczna](#narzucanie-typów))
 
-1. Integers and floats support all arithmetic, unary and comparison operators
+<details><summary>Szczegóły</summary>
+
+1. Na liczbach można wykonywać wszystkie działania arytmetyczne, unarne i porównywania
+
 ```
 > x := 4 * 2
 8
 > y := -x
 -8
 > _y == x
-true
+prawda
 ```
-2. Strings support `+` (string concatenation), `?` and comparison operators.
-   When comparing 2 strings with `==` or `!=`, their contents will be compared: otherwise, their lengths will.
+
+2. Na łańcucach można wykonywać konkatenację `+`, konwersję logiczną `?` i porównywania.
+   Kiedy porównuje się 2 łańcuchy `==` lub `!=`, ich zawartości będą porównane: w przeciwnym wypadku - ich długości
+
 ```
-> s := "Hello"
+> l1 := "Hello"
 "Hello"
-> t = s + ", world!"
+> l2 = l1 + ", world!"
 "Hello, world!"
-> s == t
-false
-> s < t
-true
+> l1 == l2
+falsz
+> l1 < l2
+prawda
 ```
-3. Logical operators work with booleans only.
-4. Unlike normal type-casting, the `?` operator will **always** convert a valid expression to boolean, like so:
-   - empty lists `[]` to `false`, otherwise `true`
-   - empty strings `""` to `false`, otherwise `true`
-   - empty dictionaries `{}` to `false`, otherwise `true`
-   - `null` to `false`
+
+3. Operatory logiczne działąją tylko z wartościami logicznymi
+4. W przeciwieństwie do normalnego narzucania typów, operator `?` będzie **zawsze** konwertował porawne wyrażenie na
+   wartość logiczną, wg schematu:
+    - puste listy `[]` na `falsz`, w przeciwnym wypadku na `prawda`
+    - puste łańcuchy `""` na `falsz`, w przeciwnym wypadku na `prawda`
+    - puste słowniki `{}` na `falsz`, w przeciwnym wypadku na `prawda`
+    - `nic` na `falsz`
+
 ```
-> myList := [1, 3, 4]
+> lista := [1, 3, 4]
 [1, 3, 4]
-> ?myList
-true
+> ?lista
+prawda
 ```
+
 ```
-> myDict := {}
+> slownik := {}
 {}
-> ?myDict
-false
+> ?slownik
+falsz
 ```
+
 </details>
 
-### Type Casting
+### Narzucanie Typów
 
-- Type casting uses `as` keyword
-- Supported types for casting: `int`, `float`, `str`, `bool`
-<details><summary>Examples</summary>
+- Narzucanie typów wykonuje się ze słowem kluczowym `jako`
+- Wspierane typy do narzucania to: `calk`, `zmienno`, `lancuch`, `logiczna`
 
-1. Type casting for binary operations
+<details><summary>Przykłady</summary>
+
+1. Narzucanie typów dla operacji binarnych
+
 ```
-> myInt := 20
+> c := 20
 20
-> myFloat := 14.5
+> zm := 14.5
 14.500000
-> myInt as float + myFloat      <- int cast to float
+> c jako zmienno + zm      <- narzucenie zmienno na calk
 34.500000
 ```
+
 ```
-> myFloat := 0.
+> zm := 0.
 0.000000
-> myBool := true
-true
-> myBool & myFloat as bool      <- float cast to bool
-false
+> l := prawda
+prawda
+> l & zm jako logiczna      <- narzucenie logiczna na zmienno
+falsz
 ```
+
 ```
-> myStr := "Year: "
-"Year: "
-> myInt := 2024
+> l := "Rok: "
+"Rok: "
+> c := 2024
 2024
-> myStr + myInt as str      <- int cast to str
-"Year: 2024"
+> l + c jako lancuch      <- narzucenie lancuch na calk
+"Rok: 2024"
 ```
-2. `as bool` vs `?` [operator](#operators)
+
+2. `jako logiczna` vs [operator](#operatory) `?`
+
 ```
-> myFloat := 3.14
+> zm := 3.14
 3.140000
-> ?myFloat           <- ok
-true
-> myFloat as bool       <- ok
-true
+> ?zm                <- ok
+prawda
+> zm jako logiczna       <- ok
+prawda
 ```
+
 ```
-> myList := [1, 3, 15]
+> lista := [1, 3, 15]
 [1, 3, 15]
-> ?myList                <- ok
-true
-> myList as bool          <- not ok
-Error
+> ?lista                  <- ok
+prawda
+> lista jako logiczna          <- nie ok
+Błąd
 ```
+
 </details>
 
-### Methods
+### Metody
 
-- List methods: `len()`, `append()`, `remove()`, `put()`
-- Dictionary methods: `size()`, `remove()`, `exists()`
-- String methods: `len()`, `ltrim()`, `rtrim()`
-<details><summary>Details</summary>
+- Metody list: `dlugosc()`, `dodaj()`, `usun()`, `wstaw()`
+- Metody słowników: `wielkosc()`, `usun()`, `istnieje()`
+- Metody łańcuchów: `dlugosc()`, `ltrym()`, `ptrym()`
 
-1. `len()` and `size()` methods don't take any arguments, they return length/size of the caller
-2. `remove()` methods take an index/key of the element to be removed as an argument
-3. `append()` method takes 1 argument that will be added to the end of the list
-4. `put()` takes an index as its 1st argument, and a value to be put at that index as its 2nd
+<details><summary>Szczegóły</summary>
+
+1. Metody `dlugosc()` i `wielkosc()` nie przyjmują żadnych argumentów, zwracają długość/wielkosć wywoływacza
+2. Metody `usun()` przyjmują indeks albo klucz elementu, który chcemy usunąć, jako argument
+3. Metoda `dodaj()` przyjmuje 1 argument, który zostanie dodany na koniec listy
+4. Metoda `wstaw()` przyjmuje indeks jako pierwszy argument i wartość, która ma być wstawiona na ten indeks jako drugi
+
 ```
-> myList := [1, 2, 3, 4, 5]
+> l := [1, 2, 3, 4, 5]
 [1, 2, 3, 4, 5]
-> myList.put(2, 2.5)
+> l.wstaw(2, 2.5)
 [1, 2, 2.5, 3, 4, 5]
 ```
-5. `exists()` method takes a key as an argument and returns true if that key exists, false otherwise
-6. `ltrim()` and `rtrim()` methods as an argument take a string of characters that will be removed starting from their respected side until a different character is found.
-   The order of the characters doesn't matter
+
+5. Metoda `istnieje()` przyjmuje klucz jako argument i zwraca `prawda` jeżeli klucz istnieje, inaczej `falsz`
+6. Metody `ltrym()` i `rtrym()` jako argument przyjmują łańcuch znaków, które mają być usunięte zaczynając od
+   odpowiedniej dla nich pozycji dopóki nie napotkany zostanie inny znak.
+   Kolejność tych znaków nie ma znaczenia
+
 ```
-> lStr := "Hhhhello, world!"
+> llancuch := "Hhhhello, world!"
 "Hhhhello, world!"
-> lStr.ltrim("Hh")
+> llancuch.ltrym("Hh")
 "ello, world!"
 ```
+
 ```
-> rStr := "Hello, world! aaaabbcde"
+> plancuch := "Hello, world! aaaabbcde"
 "Hello, world! aaaabbcde"
-> rStr.rtrim("abce d")
+> plancuch.ptrym("abce d")
 "Hello, world!"
 ```
+
 </details>
 
-### Control Structures
+### Struktury Kontrolne
 
-- If-else: `if condition then ... [else ...] stop`
-- For loop: `for i in n..m[:s] do ... stop` or `for key in dict do ... stop`
-- While loop: `while condition do ... stop`
-<details><summary>Details</summary>
+- Jeżeli-wtedy: `jezeli warunek wtedy ... [inaczej ...] stop`
+- Pętla 'dla': `dla i w n..m[:k] wykonuj ... stop` lub `dla klucz w slownik wykonuj ... stop`
+- Pętla 'podczas gdy': `podczas gdy warunek wykonuj ... stop`
 
-1. All control structures can be continued in the next lines without the use of `\`, after their respected starting keyword.
-The input will stop after the most-outer `stop` keyword was passed
+<details><summary>Szczegóły</summary>
+
+1. Wszystkie struktury kontrolne mogą być kontynuowane w następnych liniach bez użycia `\`, po odpowiadającym im
+   ropoczynającym słowie kluczowym.
+   Wejście (input) przestanie być pobierane wtedy, kiedy dla ostatniego bloku zostanie przekazane słowo kluczowe `stop`
+
 ```
-> if true then      <- continues
+> jezeli prawda wtedy      <- kontynuuje
     x := 5
-stop                <- stops
+stop                <- przerywa
 ```
+
 ```
-> if true then      <- outer block
+> jezeli prawda wtedy      <- pierwszy blok
     x := 5
-    if false then      <- inner block
+    jezeli falsz wtedy      <- drugi blok
         x = x + 5
-    else
+    inaczej
         x = x - 5
-    stop        <- inner stop
-stop         <- outer stop
+    stop               <- pierwszy stop
+stop              <- drugi stop
 ```
-2. All control structures can be passed in a single line too
+
+2. Wszystkie struktury kontrolne mogą być także przekazane w jednej linii
+
 ```
-> x := if 1 > 0 then 15 else "fifteen" stop         <- the last evaluated expression is 15
-15                                           <- the value assigned to x
+> x := jezeli 1 > 0 wtedy 15 inaczej "fifteen" stop         <- ostatnia ewaluowana wartość to 15
+15                                                     <- wartość przypisana do x
 ```
-3. For loops can iterate over range, as well as over dictionary's keys.
-When using range-based loop, the step taken after every iteration can be specified with `:`. The default step is 1
+
+3. Pętle 'dla' mogą iterować przez jakiś zakres liczbowy, a także przez klucze słownika.
+   Używając pętli opartej na zakresie liczbowym, krok robiony po każdej iteracji może zostać sprecyzowane przy
+   użyciu `:`. Domyślny krok jest równy 1
+
 ```
-> sum := 0
-0                   <- before
-> for i in 1..6 do      <- step = 1
-    sum = sum + i
+> suma := 0
+0                         <- przed
+> dla i w 1..6 wykonuj       <- krok = 1
+    suma = suma + i
 stop
-21             <- after
+21                       <- po
 ```
+
 ```
-> sum := 0
-0                     <- before
-> for i in 1..6:2 do      <- step = 2
-    sum = sum + i
+> suma := 0
+0                          <- przed
+> dla i w 1..6:2 wykonuj         <- krok = 2
+    suma = suma + i
 stop
-9                  <- after
+9                         <- po
 ```
+
 ```
-> myDict := {"one": 1, "two": 2, "three": 3}
-{"one": 1, "two": 2, "three": 3}         <- before
-> for key in myDict do
-    myDict[key] = 0
+> slownik := {"jeden": 1, "dwa": 2, "trzy": 3}
+{"jeden": 1, "dwa": 2, "trzy": 3}                  <- przed
+> dla klucz w slownik wykonuj
+    slownik[klucz] = 0
 stop
-> myDict
-{"one": 0, "two": 0, "three": 0}          <- after
+> slownik
+{"jeden": 0, "dwa": 0, "trzy": 0}               <- po
 ```
-4. For loops cannot iterate over lists directly, however the same behaviour can be achieved with `len()` [method](#methods)
+
+4. Pętle 'dla' nie mogą iterować przez listy bezpośrednio, jednak to samo zachowanie moze zostać osiągnięte
+   przy użyciu [metody](#metody) `dlugosc()`
+
 ```
-> myList := [1, -2, 3, -4, 5]
-[1, -2, 3, -4, 5]                  <- before
-> for i in 0..myList.len()-1 do
-   myList[i] = myList[i] + 1
+> lista := [1, -2, 3, -4, 5]
+[1, -2, 3, -4, 5]                          <- przed
+> dla i w 0..lista.dlugosc()-1 wykonuj
+   lista[i] = lista[i] + 1
 stop
-> myList
-[2, -1, 4, -3, 6]                 <- after
+> lista
+[2, -1, 4, -3, 6]                     <- po
 ```
-5. While loop's maximum number of iterations is 99999.
+
+5. Maksymalna liczba iteracji pętl 'podczas gdy' to 99999
+
 </details>
 
-### Functions
+### Funkcje
 
-- Function definition: `def function_name(parameters) as ... stop`
-- Function call: `function_name(arguments)`
-<details><summary>Details</summary>
+- Definiowanie funkcji: `zdef nazwa_funkcji(parametry) jako ... stop`
+- Wywołanie funkcji: `nazwa_funkcji(argumenty)`
 
-1. Function definitions always return `null`
-2. Functions can use `return` keyword to explicitly return a value.
-Without it, the last evaluated expression will be returned
+<details><summary>Szczegóły</summary>
+
+1. Definiowanie funkcji zawsze zwraca `nic`
+2. Funkcje mogą użyć słowa kluczowego `zwroc`, aby wyraźnie zwrócić daną wartość.
+   Bez tego słowa, ostatnie ewaluowane wyrażenie będzie domyślnie zwrócone
+
 ```
-> def add2(x) as
-   if (x < 0) then return 0 stop
+> zdef dodaj2(x) jako
+   jezeli (x < 0) wtedy zwroc 0 stop
    x + 2
 stop
-> add2(-1)
+> dodaj2(-1)
 0
-> add2(1)
+> dodaj2(1)
 3
 ```
-3. When trying to return `null` with `return` keyword, the `return` must be followed by either newline or `;`
+
+3. Kiedy chcemy zwrócić `nic` używając `return`, po słowie kluczowym `return` musi nastąpić nowa linia lub średnik `;`
+
 ```
-> def returnIfTwo(x) as
-   if x != 2 then return; stop      <- ok
+> zdef zwrocJezeliDwa(x) jako
+   jezeli x != 2 wtedy zwroc; stop       <- ok
    x
 stop
-> returnIfTwo(0)
+> zwrocJezeliDwa(0)
 null
-> returnIfTwo(2)
+> zwrocJezeliDwa(2)
 2
 ```
+
 ```
-> def isTwo(x) as
-   if x != 2 then return stop      <- not ok
+> zdef zwrocJezeliDwa(x) as
+   jezeli x != 2 wtedy zwroc stop       <- nie ok
    x
 stop
-Error
+Błąd
 ```
-4. Function cannot be defined with built-in function's name
+
+4. Funkcje nie mogą być zdefiniowane z nazwą wbudowanej funkcji
+
 ```
-> def print() as return 20 stop
-Error
+> zdef wyswietl() jako zwroc 20 stop
+Błąd
 ```
-5. Function definitions can use variable-length arguments with the use of `..`.
-That parameter is then treated as a list of all passed arguments
+
+5. Podczas definiowania funkcji można użyć argumentu zmiennej długości przy użyciu `..`.
+   Ten parametr jest wtedy traktowany jako lista wszystkich argumentów przekazanych podczas wywoływania funkcji
+
 ```
-> def sum(..args) as
-   sum := 0.
-   for i in 0..args.len()-1 do      <- iterating over `args` list
-      sum = sum + args[i] as float
+> zdef suma(..arg) jako
+   suma := 0.
+   dla i w 0..arg.dlugosc()-1 wykonuj          <- iterowanie przez listę `arg`
+      suma = suma + arg[i] jako zmienno
    stop
-   sum                       <- return value
+   suma                                     <- zwracana wartość
 stop
-> sum(13, -2, 9, 3.14, 80.5)
+> suma(13, -2, 9, 3.14, 80.5)
 103.640000
 ```
+
 </details>
 
-### Built-in Functions
+### Wbudowane Funkcje
 
-- `print()`: Print values seperated by `,` to stdout. Type-casting to string is not required
-- `type()`: Get the type of a value as a string
-- `roundf()`: Round a float value to given precision
-- `round()`: Round a float to the nearest integer
-- `floor()`: Round a float down to the nearest integer
-- `ceil()`: Round a float up to the nearest integer
-<details><summary>Examples</summary>
+- `wyswietl()`: Wysiwetla wartości oddzielone `,` na standardowym wyjściu. Narzucanie typu na łańcuch nie jest konieczne
+- `typ()`: Zwraca typ danej wartości w postaci łańcucha
+- `zaokraglijzp()`: Zaokrągla liczbę zmiennoprzecinkową do podanej precyzji
+- `zaokraglij()`: Zaokrągla liczbę zmiennoprzecinkową do najbliższej całkowitej
+- `podloga()`: Zaokrągla liczbę zmiennoprzecinkową do najbliższej całkowitej nie większej niż podana liczba
+- `sufit()`: Zaokrągla liczbę zmiennoprzecinkową do najbliższej całkowitej nie mniejszej niż podana liczba
 
-1. Using `type()`
+<details><summary>Przykłady</summary>
+
+1. Używanie `typ()`
+
 ```
-> myFloat := 3.14
+> zp := 3.14
 3.140000
-> def printInt(i) as
-   if type(i) != "int" then
-      print("Not an int!")
-      return
+> zdef wyswietlCalk(i) jako
+   jezeli typ(i) != "calk" wtedy
+      wyswietl("Nie całkowita!")
+      zwroc
    stop
-   print(i)
+   wyswietl(i)
 stop
-> printInt(myFloat)
-null                <- no print
+> wyswietl(zp)
+null                             <- nie wyswietlone
 ```
-2. Using `roundf()`
+
+2. Używanie `zaokraglijzp()`
+
 ```
-> myFloat := 3.141592
+> zp := 3.141592
 3.141592
-> roundf(myFloat, 2)
+> zaokraglijzp(zp, 2)
 3.140000
 ```
+
 </details>

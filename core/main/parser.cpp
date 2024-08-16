@@ -94,7 +94,7 @@ std::unique_ptr<ASTNode> Parser::parseList() {
             continue;
         }
         if (getType() != TokenType::RBRACKET) {
-            throw SyntaxError("Expected ',' or ']' when creating a list");
+            throw SyntaxError("Oczekiwano ',' lub ']' podczas tworzenia listy");
         }
     }
     advanceToken();
@@ -109,7 +109,7 @@ std::unique_ptr<ASTNode> Parser::parseDict() {
     while (getType() != TokenType::RBRACE) {
         auto key = parseLogicalAndOr();
         if (!expectToken(TokenType::COLON)) {
-            throw SyntaxError("Expected ':' after key when creating a dictionary");
+            throw SyntaxError("Oczekiwano ':' po kluczu podczas tworzenia słownika");
         }
         auto value = parseLogicalAndOr();
         elements.emplace_back(std::move(key), std::move(value));
@@ -117,7 +117,7 @@ std::unique_ptr<ASTNode> Parser::parseDict() {
             continue;
         }
         if (getType() != TokenType::RBRACE) {
-            throw SyntaxError("Expected ',' or '}' when creating a dictionary");
+            throw SyntaxError("Oczekiwano ',' lub '}' podczas tworzenia słownika");
         }
     }
     advanceToken();
@@ -129,7 +129,7 @@ std::unique_ptr<ASTNode> Parser::parseIndexAccess(std::unique_ptr<ASTNode> left)
     advanceToken();
     auto index = parseLogicalAndOr();
     if (!expectToken(TokenType::RBRACKET)) {
-        throw SyntaxError("Expected ']' after index");
+        throw SyntaxError("Oczekiwano ']' po indeksie");
     }
     return std::make_unique<IndexAccessNode>(std::move(left), std::move(index));
 }
@@ -138,13 +138,13 @@ std::unique_ptr<ASTNode> Parser::parseIndexAccess(std::unique_ptr<ASTNode> left)
 std::unique_ptr<ASTNode> Parser::parseMethodCall(std::unique_ptr<ASTNode> left) {
     advanceToken();
     if (getType() != TokenType::IDENTIFIER) {
-        throw SyntaxError("Expected method name after '.'");
+        throw SyntaxError("Oczekiwano nazwy metody po '.'");
     }
     std::string methodName = std::get<std::string>(currentToken.getValue().asBase());
     advanceToken();
 
     if (!expectToken(TokenType::LPAREN)) {
-        throw SyntaxError("Expected '(' after method name");
+        throw SyntaxError("Oczekiwano '(' po nazwie metody");
     }
     std::vector<std::unique_ptr<ASTNode>> arguments;
     if (getType() != TokenType::RPAREN) {
@@ -153,7 +153,7 @@ std::unique_ptr<ASTNode> Parser::parseMethodCall(std::unique_ptr<ASTNode> left) 
         } while (expectToken(TokenType::COMMA));
     }
     if (!expectToken(TokenType::RPAREN)) {
-        throw SyntaxError("Expected ')' after method arguments");
+        throw SyntaxError("Oczekiwano ')' po argumentach metody");
     }
     return std::make_unique<MethodCallNode>(std::move(left), methodName, std::move(arguments));
 }
@@ -162,12 +162,12 @@ std::unique_ptr<ASTNode> Parser::parseMethodCall(std::unique_ptr<ASTNode> left) 
 std::unique_ptr<ASTNode> Parser::parseIfStatement() {
     advanceToken();
     if (getType() == TokenType::EOL) {
-        throw SyntaxError("Expected condition after 'if'");
+        throw SyntaxError("Oczekiwano warunku po 'jeżeli'");
     }
     auto condition = parseLogicalAndOr();
 
     if (!expectToken(TokenType::THEN)) {
-        throw SyntaxError("Expected 'then' after if condition");
+        throw SyntaxError("Oczekiwano 'wtedy' po warunku 'jeżeli'");
     }
     auto ifBlock = parseBlock();
     std::unique_ptr<BlockNode> elseBlock = nullptr;
@@ -176,7 +176,7 @@ std::unique_ptr<ASTNode> Parser::parseIfStatement() {
         elseBlock = parseBlock();
     }
     if (!expectToken(TokenType::STOP)) {
-        throw SyntaxError("Expected 'stop' at the end of if statement");
+        throw SyntaxError("Oczekiwano 'stop' na końcu instrukcji 'jeżeli'");
     }
     return std::make_unique<IfElseNode>(std::move(condition), std::move(ifBlock), std::move(elseBlock));
 }
@@ -185,13 +185,13 @@ std::unique_ptr<ASTNode> Parser::parseIfStatement() {
 std::unique_ptr<ASTNode> Parser::parseForLoop() {
     advanceToken();
     if (getType() != TokenType::IDENTIFIER) {
-        throw SyntaxError("Expected loop-variable name after 'for'");
+        throw SyntaxError("Oczekiwano nazwy zmiennej pętli po 'dla'");
     }
     std::string variableName = std::get<std::string>(currentToken.getValue().asBase());
 
     advanceToken();
     if (!expectToken(TokenType::IN)) {
-        throw SyntaxError("Expected 'in' after loop-variable name");
+        throw SyntaxError("Oczekiwano 'w' po nazwie zmiennej pętli");
     }
 
     auto startExpr = parseLogicalAndOr();
@@ -208,12 +208,12 @@ std::unique_ptr<ASTNode> Parser::parseForLoop() {
         }
     }
     if (!expectToken(TokenType::DO)) {
-        throw SyntaxError("Expected 'do' after for loop iterable");
+        throw SyntaxError("Oczekiwano 'wykonuj' po iterowalnym elemencie pętli 'dla'");
     }
     auto body = parseBlock();
 
     if (!expectToken(TokenType::STOP)) {
-        throw SyntaxError("Expected 'stop' at the end of for loop");
+        throw SyntaxError("Oczekiwano 'stop' na końcu pętli 'dla'");
     }
     return std::make_unique<ForLoopNode>(variableName, std::move(startExpr), std::move(endExpr), std::move(stepExpr),
                                          std::move(body), isRangeLoop);
@@ -223,17 +223,17 @@ std::unique_ptr<ASTNode> Parser::parseForLoop() {
 std::unique_ptr<ASTNode> Parser::parseWhileLoop() {
     advanceToken();
     if (getType() == TokenType::EOL) {
-        throw SyntaxError("Expected condition after 'while'");
+        throw SyntaxError("Oczekiwano warunku po 'podczas gdy'");
     }
 
     auto condition = parseLogicalAndOr();
     if (!expectToken(TokenType::DO)) {
-        throw SyntaxError("Expected 'do' after while condition");
+        throw SyntaxError("Oczekiwano 'wykonuj' po warunku 'podczas gdy'");
     }
 
     auto body = parseBlock();
     if (!expectToken(TokenType::STOP)) {
-        throw SyntaxError("Expected 'stop' at the end of while loop");
+        throw SyntaxError("Oczekiwano 'stop' na końcu pętli 'podczas gdy'");
     }
     return std::make_unique<WhileLoopNode>(std::move(condition), std::move(body));
 }
@@ -242,14 +242,14 @@ std::unique_ptr<ASTNode> Parser::parseWhileLoop() {
 std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
     advanceToken();
     if (getType() != TokenType::IDENTIFIER) {
-        throw SyntaxError("Expected function name after 'def'");
+        throw SyntaxError("Oczekiwano nazwy funkcji po 'zdef'");
     }
     std::string functionName = std::get<std::string>(currentToken.getValue().asBase());
     bool hasArgs = false;
 
     advanceToken();
     if (!expectToken(TokenType::LPAREN)) {
-        throw SyntaxError("Expected '(' after function name");
+        throw SyntaxError("Oczekiwano '(' po nazwie funkcji");
     }
 
     std::vector<std::string> parameters;
@@ -258,24 +258,24 @@ std::unique_ptr<ASTNode> Parser::parseFunctionDeclaration() {
             hasArgs = true;
         }
         if (getType() != TokenType::IDENTIFIER) {
-            throw SyntaxError("Expected function parameter name");
+            throw SyntaxError("Oczekiwano nazwy parametru funkcji");
         }
         parameters.push_back(std::get<std::string>(currentToken.getValue().asBase()));
         advanceToken();
         if (getType() == TokenType::RPAREN) break;
         if (!expectToken(TokenType::COMMA)) {
-            throw SyntaxError("Expected ',' between function parameters");
+            throw SyntaxError("Oczekiwano ',' między parametrami funkcji");
         }
     }
     if (!expectToken(TokenType::RPAREN)) {
-        throw SyntaxError("Expected ')' after function parameters' names");
+        throw SyntaxError("Oczekiwano ')' po nazwach parametrów funkcji");
     }
     if (!expectToken(TokenType::AS)) {
-        throw SyntaxError("Expected 'as' after function parameters");
+        throw SyntaxError("Oczekiwano 'jako' po parametrach funkcji");
     }
     auto body = parseBlock();
     if (!expectToken(TokenType::STOP)) {
-        throw SyntaxError("Expected 'stop' after function body");
+        throw SyntaxError("Oczekiwano 'stop' po ciele funkcji");
     }
     return std::make_unique<FunctionDeclarationNode>(functionName, std::move(parameters), hasArgs, std::move(body));
 }
@@ -288,11 +288,11 @@ std::unique_ptr<ASTNode> Parser::parseFunctionCall(const std::string &name) {
         arguments.push_back(parseLogicalAndOr());
         if (getType() == TokenType::RPAREN) break;
         if (!expectToken(TokenType::COMMA)) {
-            throw SyntaxError("Expected ',' between function arguments");
+            throw SyntaxError("Oczekiwano ',' między argumentami funkcji");
         }
     }
     if (!expectToken(TokenType::RPAREN)) {
-        throw SyntaxError("Expected ')' after function arguments");
+        throw SyntaxError("Oczekiwano ')' po argumentach funkcji");
     }
     return std::make_unique<FunctionCallNode>(name, std::move(arguments));
 }
@@ -325,7 +325,7 @@ std::vector<std::unique_ptr<ASTNode>> Parser::parse() {
         if (getType() != TokenType::SEMICOLON &&
             getType() != TokenType::EOL) {
             throw SyntaxError(
-                    "Expected ';' or new line after statement but got " + getTypeName(getType()) + " instead");
+                    "Oczekiwano ';' lub nową linię na końcu wyrażenia, ale otrzymano " + getTypeName(getType()));
         }
     }
     return statements;
@@ -473,12 +473,11 @@ std::unique_ptr<ASTNode> Parser::parseFactor() {
     } else if (expectToken(TokenType::LPAREN)) {
         node = parseStatement();
         if (!expectToken(TokenType::RPAREN)) {
-            throw SyntaxError(
-                    "Expected closing parentheses ')' but got " + getTypeName(getType()) + " instead");
+            throw SyntaxError("Oczekiwano zamknięcie nawiasu ')', ale otrzymano " + getTypeName(getType()));
         }
     }
     if (!node) {
-        throw ParserError("Unexpected token: " + getTypeName(getType()));
+        throw ParserError("Nieoczekiwany token: " + getTypeName(getType()));
     }
     return node;
 }
