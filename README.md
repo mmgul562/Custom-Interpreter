@@ -63,21 +63,21 @@ Error
 - There is **no** variable declaration
 - Variable assignment uses `:=` operator
 - Variable reassignment uses `=` operator
-- Multiple variables can be assigned within a single statement
+- Multiple variables can be assigned with a single statement
 
 <details><summary>Examples</summary>
 
 1. Using `:=` and `=` operators
 
 ```
-> x := 6      <- ok
+> x := 6       <- ok
 6
-> x = 12      <- ok
+> x = 12       <- ok
 12
 ```
 
 ```
-> x = 6      <- not ok
+> x = 6       <- not ok
 Error
 ```
 
@@ -152,8 +152,8 @@ Error
 
 ```
 > myNull := print("I return nothing")
-I return nothing                         <- print
-null                                     <- result
+I return nothing                          <- print
+null                                      <- result
 ```
 
 </details>
@@ -193,9 +193,8 @@ true
 ```
 
 3. Logical operators work with booleans only.
-4. Unlike normal type-casting, the `?` operator will **always** convert a valid expression to boolean, like so:
+4. Unlike normal type-casting, the `?` operator will convert **any** valid expression to boolean, including the following:
     - empty lists `[]` to `false`, otherwise `true`
-    - empty strings `""` to `false`, otherwise `true`
     - empty dictionaries `{}` to `false`, otherwise `true`
     - `null` to `false`
 
@@ -229,7 +228,7 @@ false
 20
 > myFloat := 14.5
 14.500000
-> myInt as float + myFloat       <- int cast to float
+> myInt as float + myFloat        <- int cast to float
 34.500000
 ```
 
@@ -238,7 +237,7 @@ false
 0.000000
 > myBool := true
 true
-> myBool & myFloat as bool       <- float cast to bool
+> myBool & myFloat as bool        <- float cast to bool
 false
 ```
 
@@ -247,7 +246,7 @@ false
 "Year: "
 > myInt := 2024
 2024
-> myStr + myInt as str       <- int cast to str
+> myStr + myInt as str         <- int cast to str
 "Year: 2024"
 ```
 
@@ -256,18 +255,18 @@ false
 ```
 > myFloat := 3.14
 3.140000
-> ?myFloat             <- ok
+> ?myFloat               <- ok
 true
-> myFloat as bool         <- ok
+> myFloat as bool           <- ok
 true
 ```
 
 ```
 > myList := [1, 3, 15]
 [1, 3, 15]
-> ?myList                   <- ok
+> ?myList                    <- ok
 true
-> myList as bool            <- not ok
+> myList as bool              <- not ok
 Error
 ```
 
@@ -326,27 +325,27 @@ Error
    The input will stop after the outermost `stop` keyword was passed
 
 ```
-> if true then       <- continues
+> if true then         <- continues
     x := 5
-stop                 <- stops
+stop                  <- stops
 ```
 
 ```
-> if true then        <- outer block
+> if true then          <- outer block
     x := 5
-    if false then        <- inner block
+    if false then          <- inner block
         x = x + 5
     else
         x = x - 5
-    stop               <- inner stop
-stop                <- outer stop
+    stop                 <- inner stop
+stop                  <- outer stop
 ```
 
 2. All control structures can be passed in a single line too
 
 ```
-> x := if 1 > 0 then 15 else "fifteen" stop         <- the last evaluated expression is 15
-15                                           <- the value assigned to x
+> x := if 1 > 0 then 15 else "fifteen" stop          <- the last evaluated expression is 15
+15                                            <- the value assigned to x
 ```
 
 3. For loops can iterate over range, as well as over dictionary's keys.
@@ -354,30 +353,30 @@ stop                <- outer stop
 
 ```
 > sum := 0
-0                      <- before
-> for i in 1..6 do         <- step = 1
+0                       <- before
+> for i in 1..6 do          <- step = 1
     sum = sum + i
 stop
-21                    <- after
+21                     <- after
 ```
 
 ```
 > sum := 0
-0                        <- before
-> for i in 1..6:2 do         <- step = 2
+0                         <- before
+> for i in 1..6:2 do          <- step = 2
     sum = sum + i
 stop
-9                      <- after
+9                       <- after
 ```
 
 ```
 > myDict := {"one": 1, "two": 2, "three": 3}
-{"one": 1, "two": 2, "three": 3}                  <- before
+{"one": 1, "two": 2, "three": 3}                    <- before
 > for key in myDict do
     myDict[key] = 0
 stop
 > myDict
-{"one": 0, "two": 0, "three": 0}               <- after
+{"one": 0, "two": 0, "three": 0}                <- after
 ```
 
 4. For loops cannot iterate over lists directly, however the same behaviour can be achieved
@@ -385,7 +384,7 @@ stop
 
 ```
 > myList := [1, -2, 3, -4, 5]
-[1, -2, 3, -4, 5]                       <- before
+[1, -2, 3, -4, 5]                        <- before
 > for i in 0..myList.len()-1 do
    myList[i] = myList[i] + 1
 stop
@@ -410,8 +409,8 @@ stop
 
 ```
 > def addTwo(x) as
-   if (x < 0) then return 0 stop           <- the function will explicitly return 0
-   x + 2                                 <- or implicitly x + 2
+   if (x < 0) then return 0 stop            <- function will explicitly return 0
+   x + 2                                <- or implicitly x + 2
 stop
 > addTwo(-1)
 0
@@ -423,7 +422,7 @@ stop
 
 ```
 > def returnIfTwo(x) as
-   if x != 2 then return; stop          <- ok
+   if x != 2 then return; stop           <- ok
    x
 stop
 > returnIfTwo(0)
@@ -434,7 +433,7 @@ null
 
 ```
 > def returnIfTwo(x) as
-   if x != 2 then return stop           <- not ok
+   if x != 2 then return stop            <- not ok
    x
 stop
 Error
@@ -453,14 +452,14 @@ Error
 ```
 > def sum(..args) as
    sum := 0.
-   for i in 0..args.len()-1 do           <- iterating over 'args' list
+   for i in 0..args.len()-1 do            <- iterating over 'args' list
       sum = sum + args[i] as float
    stop
    sum
 stop
-> sum(2, 4)                           <- ok
+> sum(2, 4)                            <- ok
 6
-> sum(13, -2, 9, 3.14, 80.5)             <- ok too
+> sum(13, -2, 9, 3.14, 80.5)              <- ok too
 103.640000
 ```
 
