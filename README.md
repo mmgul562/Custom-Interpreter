@@ -50,8 +50,8 @@ Błąd
 
 ```
 > 2 + \
-2 * 2        <- kontynuacja
-6        <- wynik
+2 * 2          <- kontynuacja
+6          <- wynik
 ```
 
 </details>
@@ -68,14 +68,14 @@ Błąd
 1. Używanie operatorów `:=` i `=`
 
 ```
-> x := 6      <- ok
+> x := 6        <- ok
 6
-> x = 12      <- ok
+> x = 12        <- ok
 12
 ```
 
 ```
-> x = 6      <- nie ok
+> x = 6        <- nie ok
 Błąd
 ```
 
@@ -111,7 +111,7 @@ Błąd
 3
 ```
 
-2. `calk` i `zmienno` **nie mogą** wykonywać opreacji arytmetycznych razem.
+2. `calk` i `zmienno` **nie mogą** wykonywać opreacji arytmetycznych ze sobą.
    Najpierw jedno z nich musi mieć narzucony typ na ten drugiego ([Narzucanie typów](#narzucanie-typów))
 
 ```
@@ -196,7 +196,6 @@ prawda
 4. W przeciwieństwie do normalnego narzucania typów, operator `?` będzie **zawsze** konwertował porawne wyrażenie na
    wartość logiczną, wg schematu:
     - puste listy `[]` na `falsz`, w przeciwnym wypadku na `prawda`
-    - puste łańcuchy `""` na `falsz`, w przeciwnym wypadku na `prawda`
     - puste słowniki `{}` na `falsz`, w przeciwnym wypadku na `prawda`
     - `nic` na `falsz`
 
@@ -230,7 +229,7 @@ falsz
 20
 > zm := 14.5
 14.500000
-> c jako zmienno + zm      <- narzucenie zmienno na calk
+> c jako zmienno + zm       <- narzucenie zmienno na calk
 34.500000
 ```
 
@@ -239,7 +238,7 @@ falsz
 0.000000
 > l := prawda
 prawda
-> l & zm jako logiczna      <- narzucenie logiczna na zmienno
+> l & zm jako logiczna       <- narzucenie logiczna na zmienno
 falsz
 ```
 
@@ -248,7 +247,7 @@ falsz
 "Rok: "
 > c := 2024
 2024
-> l + c jako lancuch      <- narzucenie lancuch na calk
+> l + c jako lancuch        <- narzucenie lancuch na calk
 "Rok: 2024"
 ```
 
@@ -257,18 +256,18 @@ falsz
 ```
 > zm := 3.14
 3.140000
-> ?zm                <- ok
+> ?zm                   <- ok
 prawda
-> zm jako logiczna       <- ok
+> zm jako logiczna         <- ok
 prawda
 ```
 
 ```
 > lista := [1, 3, 15]
 [1, 3, 15]
-> ?lista                  <- ok
+> ?lista                     <- ok
 prawda
-> lista jako logiczna          <- nie ok
+> lista jako logiczna           <- nie ok
 Błąd
 ```
 
@@ -328,20 +327,20 @@ Błąd
    Wejście (input) przestanie być pobierane wtedy, kiedy dla ostatniego bloku zostanie przekazane słowo kluczowe `stop`
 
 ```
-> jezeli prawda wtedy      <- kontynuuje
+> jezeli prawda wtedy        <- kontynuuje
     x := 5
-stop                <- przerywa
+stop                     <- przerywa
 ```
 
 ```
-> jezeli prawda wtedy      <- pierwszy blok
+> jezeli prawda wtedy        <- pierwszy blok
     x := 5
-    jezeli falsz wtedy      <- drugi blok
+    jezeli falsz wtedy       <- drugi blok
         x = x + 5
     inaczej
         x = x - 5
-    stop               <- pierwszy stop
-stop              <- drugi stop
+    stop                  <- pierwszy stop
+stop                 <- drugi stop
 ```
 
 2. Wszystkie struktury kontrolne mogą być także przekazane w jednej linii
@@ -357,30 +356,30 @@ stop              <- drugi stop
 
 ```
 > suma := 0
-0                         <- przed
-> dla i w 1..6 wykonuj       <- krok = 1
+0                          <- przed
+> dla i w 1..6 wykonuj        <- krok = 1
     suma = suma + i
 stop
-21                       <- po
+21                        <- po
 ```
 
 ```
 > suma := 0
-0                          <- przed
-> dla i w 1..6:2 wykonuj         <- krok = 2
+0                           <- przed
+> dla i w 1..6:2 wykonuj          <- krok = 2
     suma = suma + i
 stop
-9                         <- po
+9                          <- po
 ```
 
 ```
 > slownik := {"jeden": 1, "dwa": 2, "trzy": 3}
-{"jeden": 1, "dwa": 2, "trzy": 3}                  <- przed
+{"jeden": 1, "dwa": 2, "trzy": 3}                   <- przed
 > dla klucz w slownik wykonuj
     slownik[klucz] = 0
 stop
 > slownik
-{"jeden": 0, "dwa": 0, "trzy": 0}               <- po
+{"jeden": 0, "dwa": 0, "trzy": 0}                <- po
 ```
 
 4. Pętle 'dla' nie mogą iterować przez listy bezpośrednio, jednak to samo zachowanie moze zostać osiągnięte
@@ -388,12 +387,12 @@ stop
 
 ```
 > lista := [1, -2, 3, -4, 5]
-[1, -2, 3, -4, 5]                          <- przed
+[1, -2, 3, -4, 5]                           <- przed
 > dla i w 0..lista.dlugosc()-1 wykonuj
    lista[i] = lista[i] + 1
 stop
 > lista
-[2, -1, 4, -3, 6]                     <- po
+[2, -1, 4, -3, 6]                      <- po
 ```
 
 5. Maksymalna liczba iteracji pętl 'podczas gdy' to 99999
@@ -426,7 +425,7 @@ stop
 
 ```
 > zdef zwrocJezeliDwa(x) jako
-   jezeli x != 2 wtedy zwroc; stop       <- ok
+   jezeli x != 2 wtedy zwroc; stop        <- ok
    x
 stop
 > zwrocJezeliDwa(0)
@@ -437,7 +436,7 @@ null
 
 ```
 > zdef zwrocJezeliDwa(x) as
-   jezeli x != 2 wtedy zwroc stop       <- nie ok
+   jezeli x != 2 wtedy zwroc stop        <- nie ok
    x
 stop
 Błąd
@@ -456,7 +455,7 @@ Błąd
 ```
 > zdef suma(..arg) jako
    suma := 0.
-   dla i w 0..arg.dlugosc()-1 wykonuj          <- iterowanie przez listę `arg`
+   dla i w 0..arg.dlugosc()-1 wykonuj           <- iterowanie przez listę `arg`
       suma = suma + arg[i] jako zmienno
    stop
    suma                                     <- zwracana wartość
@@ -491,7 +490,7 @@ stop
    wyswietl(i)
 stop
 > wyswietl(zp)
-null                             <- nie wyswietlone
+null                              <- nie wyswietlone
 ```
 
 2. Używanie `zaokraglijzp()`
